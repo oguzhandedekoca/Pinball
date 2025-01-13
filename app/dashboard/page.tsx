@@ -4,7 +4,9 @@ import { useSearchParams } from 'next/navigation';
 import { Input, Card, CardBody, Button, Tooltip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
 import { database } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { Trash2, RefreshCw } from 'lucide-react';
+import { Trash2, RefreshCw, Trophy, Users, LogOut, Table2, Timer } from 'lucide-react';
+import { useUser } from '../providers';
+import Image from 'next/image';
 
 interface PlayerData {
   player2: string;
@@ -35,6 +37,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
+  const { logout } = useUser();
 
   // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 9 }, (_, index) => {
@@ -195,30 +198,86 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-end gap-4 mb-4">
-          <Tooltip content="Tüm seçimleri temizle">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Header */}
+      <div className="bg-white shadow-md p-4">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Table2 className="text-blue-600" size={24} />
+            <h1 className="text-2xl font-bold text-blue-600">Langırt Randevu Sistemi</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Users size={20} />
+              <span>Hoş geldin, {player1}</span>
+            </div>
             <Button
               color="danger"
-              variant="flat"
-              onPress={handleClearAllSelections}
-              startContent={<RefreshCw size={20} />}
+              variant="light"
+              startContent={<LogOut size={20} />}
+              onPress={logout}
             >
-              Tümünü Temizle
+              Çıkış Yap
             </Button>
-          </Tooltip>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-8 space-y-6">
+        {/* Üst Bilgi Kartları */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardBody className="flex flex-row items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Timer size={24} />
+              </div>
+              <div>
+                <p className="text-sm opacity-80">Bugünkü Randevular</p>
+                <p className="text-2xl font-bold">{Object.keys(timeSlotSelections).length}/9</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardBody className="flex flex-row items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Trophy size={24} />
+              </div>
+              <div>
+                <p className="text-sm opacity-80">Müsait Masalar</p>
+                <p className="text-2xl font-bold">{9 - Object.keys(timeSlotSelections).length}</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardBody className="flex flex-row items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Users size={24} />
+              </div>
+              <div>
+                <p className="text-sm opacity-80">Toplam Oyuncu</p>
+                <p className="text-2xl font-bold">
+                  {Object.values(timeSlotSelections).reduce((acc, curr) => acc + 4, 0)}
+                </p>
+              </div>
+            </CardBody>
+          </Card>
         </div>
 
-        <Card>
+        {/* Oyuncu Girişi Kartı */}
+        <Card className="border-2 border-blue-100">
           <CardBody>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="col-span-2">
-                <h2 className="text-xl font-bold mb-2">Ana Oyuncu: {player1}</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="col-span-2 flex items-center gap-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users size={24} className="text-blue-600" />
+                </div>
+                <h2 className="text-xl font-bold text-blue-600">Takımını Oluştur</h2>
               </div>
               <Input
                 label="2. Oyuncu"
-                placeholder="İsim giriniz"
+                placeholder="Kaleci 🧤"
                 value={playerData.player2}
                 onChange={(e) => handlePlayerDataChange('player2', e.target.value)}
                 variant="bordered"
@@ -226,7 +285,7 @@ export default function Dashboard() {
               />
               <Input
                 label="3. Oyuncu"
-                placeholder="İsim giriniz"
+                placeholder="Orta Saha 🎯"
                 value={playerData.player3}
                 onChange={(e) => handlePlayerDataChange('player3', e.target.value)}
                 variant="bordered"
@@ -234,7 +293,7 @@ export default function Dashboard() {
               />
               <Input
                 label="4. Oyuncu"
-                placeholder="İsim giriniz"
+                placeholder="Forvet ⚡"
                 value={playerData.player4}
                 onChange={(e) => handlePlayerDataChange('player4', e.target.value)}
                 variant="bordered"
@@ -244,6 +303,7 @@ export default function Dashboard() {
           </CardBody>
         </Card>
 
+        {/* Zaman Dilimleri Grid'i */}
         <div className="grid grid-cols-3 gap-4">
           {Array.from({ length: 9 }).map((_, index) => {
             const isSelected = selectedBox === index;
@@ -255,33 +315,33 @@ export default function Dashboard() {
                 key={index}
                 isPressable={isSelectable}
                 onPress={() => isSelectable && handleBoxSelection(index)}
-                className={`transition-all duration-200 ${
+                className={`transition-all duration-300 ${
                   isSelected 
-                    ? 'border-4 border-primary scale-105 shadow-lg bg-primary-50'
+                    ? 'border-4 border-blue-500 scale-105 shadow-lg bg-blue-50'
                     : existingSelection
-                    ? 'opacity-75 bg-gray-100'
-                    : 'hover:scale-102 hover:shadow-md'
+                    ? 'bg-gray-50 border border-gray-200'
+                    : 'hover:scale-102 hover:shadow-md hover:border-blue-200'
                 }`}
               >
                 <CardBody>
                   <div className="space-y-4">
                     <div className="text-center">
-                      <p className="font-bold">Saat Dilimi</p>
-                      <p className="text-xl font-semibold text-primary">
+                      <p className="font-bold text-gray-600">Masa Saati</p>
+                      <p className="text-xl font-semibold text-blue-600">
                         {timeSlots[index]}
                       </p>
                     </div>
                     <div className="space-y-2">
                       {existingSelection ? (
                         <>
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p>1. Oyuncu: {existingSelection.player1}</p>
-                              <p>2. Oyuncu: {existingSelection.player2}</p>
-                              <p>3. Oyuncu: {existingSelection.player3}</p>
-                              <p>4. Oyuncu: {existingSelection.player4}</p>
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <p className="font-medium">🎮 {existingSelection.player1}</p>
+                              <p className="text-sm">🧤 {existingSelection.player2}</p>
+                              <p className="text-sm">🎯 {existingSelection.player3}</p>
+                              <p className="text-sm">⚡ {existingSelection.player4}</p>
                             </div>
-                            <Tooltip content="Bu seçimi sil">
+                            <Tooltip content="Bu maçı iptal et">
                               <Button
                                 isIconOnly
                                 color="danger"
@@ -297,7 +357,10 @@ export default function Dashboard() {
                           </div>
                         </>
                       ) : (
-                        <p className="text-center text-gray-500">Müsait</p>
+                        <div className="text-center space-y-2">
+                          <p className="text-gray-500">Müsait Masa</p>
+                          <div className="text-3xl">🎮</div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -307,27 +370,34 @@ export default function Dashboard() {
           })}
         </div>
 
+        {/* Onay Butonu */}
         {selectedBox !== null && areAllPlayersEntered() && (
           <div className="fixed bottom-8 right-8">
             <Button
               color="primary"
               size="lg"
               onClick={handleConfirmSelection}
+              className="bg-gradient-to-r from-blue-500 to-blue-600"
+              startContent={<Trophy size={20} />}
             >
-              Seçimi Onayla
+              Maçı Kaydet
             </Button>
           </div>
         )}
 
+        {/* Silme Modalı */}
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalContent>
-            <ModalHeader>Seçimi Sil</ModalHeader>
+            <ModalHeader className="flex gap-2 items-center">
+              <Table2 size={24} />
+              Maçı İptal Et
+            </ModalHeader>
             <ModalBody>
-              Bu zaman dilimindeki seçimi silmek istediğinizden emin misiniz?
+              Bu masa rezervasyonunu iptal etmek istediğinizden emin misiniz?
             </ModalBody>
             <ModalFooter>
               <Button variant="flat" onPress={onClose}>
-                İptal
+                Vazgeç
               </Button>
               <Button 
                 color="danger" 
@@ -336,8 +406,9 @@ export default function Dashboard() {
                     handleDeleteTimeSlot(selectedBoxForDelete);
                   }
                 }}
+                startContent={<Trash2 size={20} />}
               >
-                Sil
+                İptal Et
               </Button>
             </ModalFooter>
           </ModalContent>
