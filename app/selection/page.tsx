@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { database } from '../firebase/config';
-import { ref, update } from 'firebase/database';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 
 const selections = [
@@ -18,12 +18,17 @@ export default function Selection() {
 
   const handleSelection = async (selection: string) => {
     if (username) {
-      const userRef = ref(database, 'users/' + username);
-      await update(userRef, {
-        selection: selection,
-        selectionTime: new Date().toISOString()
-      });
-      setSelectedOption(selection);
+      try {
+        const userRef = doc(database, 'Users', username);
+        await updateDoc(userRef, {
+          selection: selection,
+          selectionTime: new Date().toISOString()
+        });
+        setSelectedOption(selection);
+      } catch (error) {
+        console.error("Error updating document: ", error);
+        alert("Seçim kaydedilirken bir hata oluştu!");
+      }
     }
   };
 

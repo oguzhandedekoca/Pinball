@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBLkXQVbvaxr-UjbvtS37Q3ta267qHBfvI",
@@ -12,20 +12,4 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const ref = collection(db, 'Users');
-
-getDocs(ref)
-  .then((snapshot) => {
-    const fruits = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    console.log(fruits);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
 export const database = getFirestore(app);
