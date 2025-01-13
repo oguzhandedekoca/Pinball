@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Input, Card, CardBody, Button } from "@nextui-org/react";
+import { Input, Card, CardBody, Button, Tooltip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
 import { database } from '../firebase/config';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { Trash2, RefreshCw } from 'lucide-react';
 
 interface PlayerData {
   player2: string;
@@ -32,6 +33,8 @@ export default function Dashboard() {
   const [selectedBox, setSelectedBox] = useState<number | null>(null);
   const [timeSlotSelections, setTimeSlotSelections] = useState<{ [key: number]: TimeSlotData }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const {isOpen, onOpen, onClose} = useDisclosure();
+  const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
 
   // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 9 }, (_, index) => {
@@ -126,6 +129,51 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteTimeSlot = async (boxIndex: number) => {
+    try {
+      const selectionsRef = collection(database, 'selections');
+      const q = query(selectionsRef, where('selectedBox', '==', boxIndex));
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach(async (document) => {
+        await deleteDoc(doc(database, 'selections', document.id));
+      });
+
+      // Yerel state'i güncelle
+      const newTimeSlotSelections = { ...timeSlotSelections };
+      delete newTimeSlotSelections[boxIndex];
+      setTimeSlotSelections(newTimeSlotSelections);
+
+      onClose(); // Modal'ı kapat
+      alert("Seçim başarıyla silindi!");
+    } catch (error) {
+      console.error("Error deleting time slot:", error);
+      alert("Silme işlemi sırasında bir hata oluştu!");
+    }
+  };
+
+  const handleClearAllSelections = async () => {
+    if (window.confirm("Tüm seçimleri silmek istediğinizden emin misiniz?")) {
+      try {
+        const selectionsRef = collection(database, 'selections');
+        const querySnapshot = await getDocs(selectionsRef);
+        
+        const deletePromises = querySnapshot.docs.map(doc => 
+          deleteDoc(doc.ref)
+        );
+        
+        await Promise.all(deletePromises);
+        
+        // Yerel state'i temizle
+        setTimeSlotSelections({});
+        alert("Tüm seçimler başarıyla silindi!");
+      } catch (error) {
+        console.error("Error clearing selections:", error);
+        alert("Temizleme işlemi sırasında bir hata oluştu!");
+      }
+    }
+  };
+
   if (!player1) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -149,6 +197,19 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex justify-end gap-4 mb-4">
+          <Tooltip content="Tüm seçimleri temizle">
+            <Button
+              color="danger"
+              variant="flat"
+              onPress={handleClearAllSelections}
+              startContent={<RefreshCw size={20} />}
+            >
+              Tümünü Temizle
+            </Button>
+          </Tooltip>
+        </div>
+
         <Card>
           <CardBody>
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -213,10 +274,27 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       {existingSelection ? (
                         <>
-                          <p>1. Oyuncu: {existingSelection.player1}</p>
-                          <p>2. Oyuncu: {existingSelection.player2}</p>
-                          <p>3. Oyuncu: {existingSelection.player3}</p>
-                          <p>4. Oyuncu: {existingSelection.player4}</p>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p>1. Oyuncu: {existingSelection.player1}</p>
+                              <p>2. Oyuncu: {existingSelection.player2}</p>
+                              <p>3. Oyuncu: {existingSelection.player3}</p>
+                              <p>4. Oyuncu: {existingSelection.player4}</p>
+                            </div>
+                            <Tooltip content="Bu seçimi sil">
+                              <Button
+                                isIconOnly
+                                color="danger"
+                                variant="light"
+                                onPress={() => {
+                                  setSelectedBoxForDelete(index);
+                                  onOpen();
+                                }}
+                              >
+                                <Trash2 size={20} />
+                              </Button>
+                            </Tooltip>
+                          </div>
                         </>
                       ) : (
                         <p className="text-center text-gray-500">Müsait</p>
@@ -240,6 +318,30 @@ export default function Dashboard() {
             </Button>
           </div>
         )}
+
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalContent>
+            <ModalHeader>Seçimi Sil</ModalHeader>
+            <ModalBody>
+              Bu zaman dilimindeki seçimi silmek istediğinizden emin misiniz?
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="flat" onPress={onClose}>
+                İptal
+              </Button>
+              <Button 
+                color="danger" 
+                onPress={() => {
+                  if (selectedBoxForDelete !== null) {
+                    handleDeleteTimeSlot(selectedBoxForDelete);
+                  }
+                }}
+              >
+                Sil
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </div>
     </div>
   );
