@@ -201,12 +201,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
       <div className="bg-white shadow-md p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Table2 className="text-blue-600" size={24} />
-            <h1 className="text-2xl font-bold text-blue-600">Langırt Randevu Sistemi</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-blue-600">Langırt Randevu Sistemi</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
               <Users size={20} className="text-blue-600" />
               <span className="font-medium text-blue-600">Hoş geldin, {player1}</span>
@@ -223,9 +223,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-8 space-y-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
         {/* Üst Bilgi Kartları */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardBody className="flex flex-row items-center gap-4">
               <div className="p-3 bg-white/20 rounded-lg">
@@ -250,7 +250,7 @@ export default function Dashboard() {
             </CardBody>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white sm:col-span-2 lg:col-span-1">
             <CardBody className="flex flex-row items-center gap-4">
               <div className="p-3 bg-white/20 rounded-lg">
                 <Users size={24} />
@@ -275,9 +275,9 @@ export default function Dashboard() {
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Trophy size={24} className="text-blue-600" />
                   </div>
-                  <h2 className="text-xl font-bold text-blue-600">1. Takım</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-blue-600">1. Takım</h2>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">1. Oyuncu (Kaleci)</p>
                     <div className="p-3 bg-blue-50 rounded-lg">
@@ -301,9 +301,9 @@ export default function Dashboard() {
                   <div className="p-2 bg-red-100 rounded-lg">
                     <Trophy size={24} className="text-red-600" />
                   </div>
-                  <h2 className="text-xl font-bold text-red-600">2. Takım</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-red-600">2. Takım</h2>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="3. Oyuncu (Kaleci)"
                     placeholder="Kaleci 🧤"
@@ -327,7 +327,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Zaman Dilimleri Grid'i */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {Array.from({ length: 37 }).map((_, index) => {
             const isSelected = selectedBox === index;
             const existingSelection = timeSlotSelections[index];
@@ -406,7 +406,7 @@ export default function Dashboard() {
 
         {/* Onay Butonu */}
         {selectedBox !== null && areAllPlayersEntered() && (
-          <div className="fixed bottom-8 right-8">
+          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
             <Button
               color="primary"
               size="lg"
