@@ -3,7 +3,6 @@
 import { NextUIProvider } from '@nextui-org/react';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme as useNextTheme } from 'next-themes';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 interface UserContextType {

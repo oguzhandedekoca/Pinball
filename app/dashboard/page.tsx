@@ -4,9 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { Input, Card, CardBody, Button, Tooltip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
 import { database } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { Trash2, RefreshCw, Trophy, Users, LogOut, Table2, Timer } from 'lucide-react';
+import { Trash2, Trophy, Users, LogOut, Table2, Timer } from 'lucide-react';
 import { useUser } from '../providers';
-import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 
@@ -163,28 +162,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleClearAllSelections = async () => {
-    if (window.confirm("Tüm seçimleri silmek istediğinizden emin misiniz?")) {
-      try {
-        const selectionsRef = collection(database, 'selections');
-        const querySnapshot = await getDocs(selectionsRef);
-        
-        const deletePromises = querySnapshot.docs.map(doc => 
-          deleteDoc(doc.ref)
-        );
-        
-        await Promise.all(deletePromises);
-        
-        // Yerel state'i temizle
-        setTimeSlotSelections({});
-        alert("Tüm seçimler başarıyla silindi!");
-      } catch (error) {
-        console.error("Error clearing selections:", error);
-        alert("Temizleme işlemi sırasında bir hata oluştu!");
-      }
-    }
-  };
-
   if (!mounted) return null;
   
   if (!player1) {
@@ -280,7 +257,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm opacity-80">Toplam Oyuncu</p>
                 <p className="text-2xl font-bold">
-                  {Object.values(timeSlotSelections).reduce((acc, curr) => acc + 4, 0)}
+                  {Object.values(timeSlotSelections).length * 4}
                 </p>
               </div>
             </CardBody>

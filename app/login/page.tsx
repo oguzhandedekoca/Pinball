@@ -28,7 +28,7 @@ export default function Login() {
     if (username.trim()) {
       setIsLoading(true);
       try {
-        const docRef = await addDoc(collection(database, 'users'), {
+        await addDoc(collection(database, 'users'), {
           username: username,
           loginTime: new Date().toISOString(),
           role: 'player1'
