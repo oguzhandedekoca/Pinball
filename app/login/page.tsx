@@ -1,17 +1,27 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { database } from '../firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardBody, CardHeader } from "@nextui-org/react";
 import { Trophy, Users, Table2, Timer, Gamepad2 } from 'lucide-react';
 import { useUser } from '../providers';
+import { useTheme } from 'next-themes';
+import { Moon, Sun } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setCurrentUser } = useUser();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,21 +46,34 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 flex flex-col">
       {/* Header */}
-      <div className="w-full bg-white shadow-sm p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center">
-          <Table2 className="text-blue-600 mr-2" size={32} />
-          <h1 className="text-2xl md:text-3xl font-bold text-blue-600">
-            Langırt Randevu Sistemi
-          </h1>
+      <div className="w-full bg-white dark:bg-gray-900 shadow-sm p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center">
+            <Table2 className="text-blue-600 dark:text-blue-400 mr-2" size={32} />
+            <h1 className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
+              Langırt Randevu Sistemi
+            </h1>
+          </div>
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? (
+              <Sun className="text-yellow-400" size={24} />
+            ) : (
+              <Moon className="text-gray-600" size={24} />
+            )}
+          </Button>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl mx-auto">
         {/* Sol taraf - Bilgi Kartları */}
         <div className="w-full md:w-1/2 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800 text-center md:text-left mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center md:text-left mb-6">
             Hoş Geldiniz! 👋
           </h2>
           
@@ -94,12 +117,14 @@ export default function Login() {
 
         {/* Sağ taraf - Login Formu */}
         <div className="w-full md:w-1/2 max-w-md">
-          <Card className="border-2 border-blue-100">
+          <Card className="border-2 border-blue-100 dark:border-gray-700">
             <CardHeader className="flex gap-3 justify-center pb-0">
               <div className="flex flex-col items-center">
-                <Gamepad2 size={40} className="text-blue-600 mb-2" />
-                <h1 className="text-xl font-bold text-gray-800">Oyuncu Girişi</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <Gamepad2 size={40} className="text-blue-600 dark:text-blue-400 mb-2" />
+                <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                  Oyuncu Girişi
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Hemen giriş yap ve maç programı oluştur
                 </p>
               </div>
@@ -134,9 +159,9 @@ export default function Login() {
       </div>
 
       {/* Footer */}
-      <div className="w-full bg-white mt-auto">
-        <div className="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-gray-500">
-          © 2024 Langırt Randevu Sistemi. Tüm hakları saklıdır.
+      <div className="w-full bg-white dark:bg-gray-900 mt-auto">
+        <div className="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+          © 2025 Langırt Randevu Sistemi. Tüm hakları saklıdır.
         </div>
       </div>
     </div>

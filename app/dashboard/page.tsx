@@ -7,6 +7,8 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'fireb
 import { Trash2, RefreshCw, Trophy, Users, LogOut, Table2, Timer } from 'lucide-react';
 import { useUser } from '../providers';
 import Image from 'next/image';
+import { useTheme } from 'next-themes';
+import { Moon, Sun } from 'lucide-react';
 
 interface PlayerData {
   player2: string;
@@ -38,14 +40,20 @@ export default function Dashboard() {
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
   const { logout } = useUser();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  // Zaman dilimlerini güncelle (18:00'a kadar)
+  // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 37 }, (_, index) => {
     const baseTime = new Date();
     baseTime.setHours(9, 0, 0, 0);
     baseTime.setMinutes(baseTime.getMinutes() + (index * 15));
     return baseTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Mevcut seçimleri Firebase'den çek
   useEffect(() => {
@@ -177,6 +185,8 @@ export default function Dashboard() {
     }
   };
 
+  if (!mounted) return null;
+  
   if (!player1) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -198,19 +208,31 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="bg-white shadow-md p-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="bg-white dark:bg-gray-900 shadow-md p-4">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Table2 className="text-blue-600" size={24} />
-            <h1 className="text-xl sm:text-2xl font-bold text-blue-600">Langırt Randevu Sistemi</h1>
+            <Table2 className="text-blue-600 dark:text-blue-400" size={24} />
+            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Langırt Randevu Sistemi</h1>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
-              <Users size={20} className="text-blue-600" />
-              <span className="font-medium text-blue-600">Hoş geldin, {player1}</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-gray-800 px-4 py-2 rounded-lg">
+              <Users size={20} className="text-blue-600 dark:text-blue-400" />
+              <span className="font-medium text-blue-600 dark:text-blue-400">Hoş geldin, {player1}</span>
             </div>
+            <Button
+              isIconOnly
+              variant="light"
+              onPress={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="min-w-unit-10"
+            >
+              {theme === 'dark' ? (
+                <Sun className="text-yellow-400" size={24} />
+              ) : (
+                <Moon className="text-gray-600" size={24} />
+              )}
+            </Button>
             <Button
               color="danger"
               variant="flat"
@@ -266,22 +288,22 @@ export default function Dashboard() {
         </div>
 
         {/* Oyuncu Girişi Kartı */}
-        <Card className="border-2 border-blue-100">
+        <Card className="border-2 border-blue-100 dark:border-gray-700">
           <CardBody>
             <div className="space-y-6">
               {/* 1. Takım */}
-              <div className="border-b pb-4">
+              <div className="border-b border-blue-100 dark:border-gray-700 pb-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Trophy size={24} className="text-blue-600" />
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Trophy size={24} className="text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-blue-600">1. Takım</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">1. Takım</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">1. Oyuncu (Kaleci)</p>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="font-medium">🧤 {player1}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">1. Oyuncu (Kaleci)</p>
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="font-medium text-gray-800 dark:text-gray-200">🧤 {player1}</p>
                     </div>
                   </div>
                   <Input
@@ -291,6 +313,9 @@ export default function Dashboard() {
                     onChange={(e) => handlePlayerDataChange('player2', e.target.value)}
                     variant="bordered"
                     labelPlacement="outside"
+                    classNames={{
+                      label: "text-gray-600 dark:text-gray-400",
+                    }}
                   />
                 </div>
               </div>
@@ -298,10 +323,10 @@ export default function Dashboard() {
               {/* 2. Takım */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <Trophy size={24} className="text-red-600" />
+                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                    <Trophy size={24} className="text-red-600 dark:text-red-400" />
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-red-600">2. Takım</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-red-600 dark:text-red-400">2. Takım</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
@@ -311,6 +336,9 @@ export default function Dashboard() {
                     onChange={(e) => handlePlayerDataChange('player3', e.target.value)}
                     variant="bordered"
                     labelPlacement="outside"
+                    classNames={{
+                      label: "text-gray-600 dark:text-gray-400",
+                    }}
                   />
                   <Input
                     label="4. Oyuncu (Forvet)"
@@ -319,6 +347,9 @@ export default function Dashboard() {
                     onChange={(e) => handlePlayerDataChange('player4', e.target.value)}
                     variant="bordered"
                     labelPlacement="outside"
+                    classNames={{
+                      label: "text-gray-600 dark:text-gray-400",
+                    }}
                   />
                 </div>
               </div>
@@ -340,17 +371,17 @@ export default function Dashboard() {
                 onPress={() => isSelectable && handleBoxSelection(index)}
                 className={`transition-all duration-300 ${
                   isSelected 
-                    ? 'border-4 border-blue-500 scale-105 shadow-lg bg-blue-50'
+                    ? 'border-4 border-blue-500 scale-105 shadow-lg bg-blue-50 dark:bg-blue-900/20'
                     : existingSelection
-                    ? 'opacity-90 bg-gray-100 border-2 border-gray-300 cursor-not-allowed'
-                    : 'hover:scale-102 hover:shadow-md hover:border-blue-200'
+                    ? 'opacity-90 bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 cursor-not-allowed'
+                    : 'hover:scale-102 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-400'
                 }`}
               >
                 <CardBody className="p-3">
                   <div className="flex flex-col">
                     <div className="text-center mb-2">
-                      <p className="font-bold text-gray-600 text-sm">Masa Saati</p>
-                      <p className="text-lg font-semibold text-blue-600">
+                      <p className="font-bold text-gray-600 dark:text-gray-300 text-sm">Masa Saati</p>
+                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                         {timeSlots[index]}
                       </p>
                     </div>
@@ -358,19 +389,19 @@ export default function Dashboard() {
                       <div>
                         <div className="grid grid-cols-2 gap-2">
                           {/* 1. Takım */}
-                          <div className="bg-blue-50 p-2 rounded-lg">
-                            <p className="text-xs font-medium text-blue-600 mb-1">1. Takım</p>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
+                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">1. Takım</p>
                             <div className="space-y-1">
-                              <p className="text-xs">🧤 {existingSelection.player1}</p>
-                              <p className="text-xs">🎯 {existingSelection.player2}</p>
+                              <p className="text-xs text-gray-700 dark:text-gray-300">🧤 {existingSelection.player1}</p>
+                              <p className="text-xs text-gray-700 dark:text-gray-300">🎯 {existingSelection.player2}</p>
                             </div>
                           </div>
                           {/* 2. Takım */}
-                          <div className="bg-red-50 p-2 rounded-lg">
-                            <p className="text-xs font-medium text-red-600 mb-1">2. Takım</p>
+                          <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">
+                            <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">2. Takım</p>
                             <div className="space-y-1">
-                              <p className="text-xs">🧤 {existingSelection.player3}</p>
-                              <p className="text-xs">🎯 {existingSelection.player4}</p>
+                              <p className="text-xs text-gray-700 dark:text-gray-300">🧤 {existingSelection.player3}</p>
+                              <p className="text-xs text-gray-700 dark:text-gray-300">🎯 {existingSelection.player4}</p>
                             </div>
                           </div>
                         </div>
@@ -393,7 +424,7 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-4">
-                        <p className="text-gray-500 text-sm">Müsait Masa</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Müsait Masa</p>
                         <div className="text-2xl mt-2">🎮</div>
                       </div>
                     )}
@@ -411,7 +442,7 @@ export default function Dashboard() {
               color="primary"
               size="lg"
               onClick={handleConfirmSelection}
-              className="bg-gradient-to-r from-blue-500 to-blue-600"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700"
               startContent={<Trophy size={20} />}
             >
               Maçı Kaydet
@@ -419,8 +450,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Silme Modalı */}
-        <Modal isOpen={isOpen} onClose={onClose}>
+        {/* Modal */}
+        <Modal 
+          isOpen={isOpen} 
+          onClose={onClose}
+          classNames={{
+            header: "dark:text-gray-200",
+            body: "dark:text-gray-300",
+          }}
+        >
           <ModalContent>
             <ModalHeader className="flex gap-2 items-center">
               <Table2 size={24} />
