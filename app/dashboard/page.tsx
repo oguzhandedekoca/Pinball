@@ -12,6 +12,7 @@ import { StatsCards } from '../components/StatsCards';
 import { PlayerForm } from '../components/PlayerForm';
 import { TimeSlotGrid } from '../components/TimeSlotGrid';
 import { PlayerData, TimeSlotData } from '../types';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -165,11 +166,7 @@ export default function Dashboard() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Yükleniyor...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
