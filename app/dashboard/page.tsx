@@ -39,8 +39,8 @@ export default function Dashboard() {
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
   const { logout } = useUser();
 
-  // Zaman dilimlerini oluştur
-  const timeSlots = Array.from({ length: 9 }, (_, index) => {
+  // Zaman dilimlerini güncelle (18:00'a kadar)
+  const timeSlots = Array.from({ length: 37 }, (_, index) => {
     const baseTime = new Date();
     baseTime.setHours(9, 0, 0, 0);
     baseTime.setMinutes(baseTime.getMinutes() + (index * 15));
@@ -207,13 +207,13 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-blue-600">Langırt Randevu Sistemi</h1>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Users size={20} />
-              <span>Hoş geldin, {player1}</span>
+            <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+              <Users size={20} className="text-blue-600" />
+              <span className="font-medium text-blue-600">Hoş geldin, {player1}</span>
             </div>
             <Button
               color="danger"
-              variant="light"
+              variant="flat"
               startContent={<LogOut size={20} />}
               onPress={logout}
             >
@@ -233,7 +233,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-sm opacity-80">Bugünkü Randevular</p>
-                <p className="text-2xl font-bold">{Object.keys(timeSlotSelections).length}/9</p>
+                <p className="text-2xl font-bold">{Object.keys(timeSlotSelections).length}/37</p>
               </div>
             </CardBody>
           </Card>
@@ -245,7 +245,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-sm opacity-80">Müsait Masalar</p>
-                <p className="text-2xl font-bold">{9 - Object.keys(timeSlotSelections).length}</p>
+                <p className="text-2xl font-bold">{37 - Object.keys(timeSlotSelections).length}</p>
               </div>
             </CardBody>
           </Card>
@@ -268,44 +268,67 @@ export default function Dashboard() {
         {/* Oyuncu Girişi Kartı */}
         <Card className="border-2 border-blue-100">
           <CardBody>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="col-span-2 flex items-center gap-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users size={24} className="text-blue-600" />
+            <div className="space-y-6">
+              {/* 1. Takım */}
+              <div className="border-b pb-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Trophy size={24} className="text-blue-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-blue-600">1. Takım</h2>
                 </div>
-                <h2 className="text-xl font-bold text-blue-600">Takımını Oluştur</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600">1. Oyuncu (Kaleci)</p>
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="font-medium">🧤 {player1}</p>
+                    </div>
+                  </div>
+                  <Input
+                    label="2. Oyuncu (Forvet)"
+                    placeholder="Forvet oyuncusu 🎯"
+                    value={playerData.player2}
+                    onChange={(e) => handlePlayerDataChange('player2', e.target.value)}
+                    variant="bordered"
+                    labelPlacement="outside"
+                  />
+                </div>
               </div>
-              <Input
-                label="2. Oyuncu"
-                placeholder="Kaleci 🧤"
-                value={playerData.player2}
-                onChange={(e) => handlePlayerDataChange('player2', e.target.value)}
-                variant="bordered"
-                labelPlacement="outside"
-              />
-              <Input
-                label="3. Oyuncu"
-                placeholder="Orta Saha 🎯"
-                value={playerData.player3}
-                onChange={(e) => handlePlayerDataChange('player3', e.target.value)}
-                variant="bordered"
-                labelPlacement="outside"
-              />
-              <Input
-                label="4. Oyuncu"
-                placeholder="Forvet ⚡"
-                value={playerData.player4}
-                onChange={(e) => handlePlayerDataChange('player4', e.target.value)}
-                variant="bordered"
-                labelPlacement="outside"
-              />
+
+              {/* 2. Takım */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <Trophy size={24} className="text-red-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-red-600">2. Takım</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="3. Oyuncu (Kaleci)"
+                    placeholder="Kaleci 🧤"
+                    value={playerData.player3}
+                    onChange={(e) => handlePlayerDataChange('player3', e.target.value)}
+                    variant="bordered"
+                    labelPlacement="outside"
+                  />
+                  <Input
+                    label="4. Oyuncu (Forvet)"
+                    placeholder="Forvet 🎯"
+                    value={playerData.player4}
+                    onChange={(e) => handlePlayerDataChange('player4', e.target.value)}
+                    variant="bordered"
+                    labelPlacement="outside"
+                  />
+                </div>
+              </div>
             </div>
           </CardBody>
         </Card>
 
         {/* Zaman Dilimleri Grid'i */}
-        <div className="grid grid-cols-3 gap-4">
-          {Array.from({ length: 9 }).map((_, index) => {
+        <div className="grid grid-cols-4 gap-3">
+          {Array.from({ length: 37 }).map((_, index) => {
             const isSelected = selectedBox === index;
             const existingSelection = timeSlotSelections[index];
             const isSelectable = isTimeSlotSelectable(index);
@@ -319,50 +342,61 @@ export default function Dashboard() {
                   isSelected 
                     ? 'border-4 border-blue-500 scale-105 shadow-lg bg-blue-50'
                     : existingSelection
-                    ? 'bg-gray-50 border border-gray-200'
+                    ? 'opacity-90 bg-gray-100 border-2 border-gray-300 cursor-not-allowed'
                     : 'hover:scale-102 hover:shadow-md hover:border-blue-200'
                 }`}
               >
-                <CardBody>
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <p className="font-bold text-gray-600">Masa Saati</p>
-                      <p className="text-xl font-semibold text-blue-600">
+                <CardBody className="p-3">
+                  <div className="flex flex-col">
+                    <div className="text-center mb-2">
+                      <p className="font-bold text-gray-600 text-sm">Masa Saati</p>
+                      <p className="text-lg font-semibold text-blue-600">
                         {timeSlots[index]}
                       </p>
                     </div>
-                    <div className="space-y-2">
-                      {existingSelection ? (
-                        <>
-                          <div className="flex justify-between items-start">
+                    {existingSelection ? (
+                      <div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* 1. Takım */}
+                          <div className="bg-blue-50 p-2 rounded-lg">
+                            <p className="text-xs font-medium text-blue-600 mb-1">1. Takım</p>
                             <div className="space-y-1">
-                              <p className="font-medium">🎮 {existingSelection.player1}</p>
-                              <p className="text-sm">🧤 {existingSelection.player2}</p>
-                              <p className="text-sm">🎯 {existingSelection.player3}</p>
-                              <p className="text-sm">⚡ {existingSelection.player4}</p>
+                              <p className="text-xs">🧤 {existingSelection.player1}</p>
+                              <p className="text-xs">🎯 {existingSelection.player2}</p>
                             </div>
-                            <Tooltip content="Bu maçı iptal et">
-                              <Button
-                                isIconOnly
-                                color="danger"
-                                variant="light"
-                                onPress={() => {
-                                  setSelectedBoxForDelete(index);
-                                  onOpen();
-                                }}
-                              >
-                                <Trash2 size={20} />
-                              </Button>
-                            </Tooltip>
                           </div>
-                        </>
-                      ) : (
-                        <div className="text-center space-y-2">
-                          <p className="text-gray-500">Müsait Masa</p>
-                          <div className="text-3xl">🎮</div>
+                          {/* 2. Takım */}
+                          <div className="bg-red-50 p-2 rounded-lg">
+                            <p className="text-xs font-medium text-red-600 mb-1">2. Takım</p>
+                            <div className="space-y-1">
+                              <p className="text-xs">🧤 {existingSelection.player3}</p>
+                              <p className="text-xs">🎯 {existingSelection.player4}</p>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="mt-2 flex justify-end">
+                          <Tooltip content="Bu maçı iptal et">
+                            <Button
+                              isIconOnly
+                              color="danger"
+                              variant="light"
+                              size="sm"
+                              onPress={() => {
+                                setSelectedBoxForDelete(index);
+                                onOpen();
+                              }}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-4">
+                        <p className="text-gray-500 text-sm">Müsait Masa</p>
+                        <div className="text-2xl mt-2">🎮</div>
+                      </div>
+                    )}
                   </div>
                 </CardBody>
               </Card>
