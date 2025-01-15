@@ -17,6 +17,7 @@ import { LoadingScreen } from '../components/LoadingScreen';
 export default function Dashboard() {
   const searchParams = useSearchParams();
   const player1 = searchParams.get('player1');
+  const position = searchParams.get('position');
   const [playerData, setPlayerData] = useState<PlayerData>({
     player2: '',
     player3: '',
@@ -181,7 +182,9 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-blue-50 dark:bg-gray-800 px-4 py-2 rounded-lg">
               <Users size={20} className="text-blue-600 dark:text-blue-400" />
-              <span className="font-medium text-blue-600 dark:text-blue-400">Hoş geldin, {player1}</span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">
+                Hoş geldin, {player1} ({position === 'kaleci' ? '🧤' : '🎯'})
+              </span>
             </div>
             <Button
               isIconOnly
@@ -216,6 +219,7 @@ export default function Dashboard() {
 
         <PlayerForm 
           player1={player1 || ''}
+          position={position || 'kaleci'}
           playerData={playerData}
           onPlayerDataChange={handlePlayerDataChange}
         />

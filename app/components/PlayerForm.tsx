@@ -5,11 +5,14 @@ import { PlayerData } from '../types';
 
 interface PlayerFormProps {
   player1: string;
+  position: string;
   playerData: PlayerData;
   onPlayerDataChange: (field: keyof PlayerData, value: string) => void;
 }
 
-export function PlayerForm({ player1, playerData, onPlayerDataChange }: PlayerFormProps) {
+export function PlayerForm({ player1, position, playerData, onPlayerDataChange }: PlayerFormProps) {
+  const isGoalkeeper = position === 'kaleci';
+
   return (
     <Card className="border-2 border-blue-100 dark:border-gray-700">
       <CardBody>
@@ -23,23 +26,47 @@ export function PlayerForm({ player1, playerData, onPlayerDataChange }: PlayerFo
               <h2 className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">1. Takım</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">1. Oyuncu (Kaleci)</p>
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="font-medium text-gray-800 dark:text-gray-200">🧤 {player1}</p>
-                </div>
-              </div>
-              <Input
-                label="2. Oyuncu (Forvet)"
-                placeholder="Forvet oyuncusu 🎯"
-                value={playerData.player2}
-                onChange={(e) => onPlayerDataChange('player2', e.target.value)}
-                variant="bordered"
-                labelPlacement="outside"
-                classNames={{
-                  label: "text-gray-600 dark:text-gray-400",
-                }}
-              />
+              {isGoalkeeper ? (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">1. Oyuncu (Kaleci)</p>
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="font-medium text-gray-800 dark:text-gray-200">🧤 {player1}</p>
+                    </div>
+                  </div>
+                  <Input
+                    label="2. Oyuncu (Forvet)"
+                    placeholder="Forvet oyuncusu 🎯"
+                    value={playerData.player2}
+                    onChange={(e) => onPlayerDataChange('player2', e.target.value)}
+                    variant="bordered"
+                    labelPlacement="outside"
+                    classNames={{
+                      label: "text-gray-600 dark:text-gray-400",
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Input
+                    label="1. Oyuncu (Kaleci)"
+                    placeholder="Kaleci 🧤"
+                    value={playerData.player2}
+                    onChange={(e) => onPlayerDataChange('player2', e.target.value)}
+                    variant="bordered"
+                    labelPlacement="outside"
+                    classNames={{
+                      label: "text-gray-600 dark:text-gray-400",
+                    }}
+                  />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">2. Oyuncu (Forvet)</p>
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="font-medium text-gray-800 dark:text-gray-200">🎯 {player1}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { database } from '../firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { Input, Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem } from "@nextui-org/react";
 import { Trophy, Users, Table2, Timer, Gamepad2 } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
@@ -11,11 +11,17 @@ import { Moon, Sun } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
+  const [position, setPosition] = useState('kaleci');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setCurrentUser } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  const positions = [
+    { label: "Kaleci 🧤", value: "kaleci" },
+    { label: "Forvet 🎯", value: "forvet" }
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -30,12 +36,12 @@ export default function Login() {
       try {
         await addDoc(collection(database, 'users'), {
           username: username,
-          loginTime: new Date().toISOString(),
-          role: 'player1'
+          position: position,
+          loginTime: new Date().toISOString()
         });
 
         setCurrentUser(username);
-        router.push(`/dashboard?player1=${username}`);
+        router.push(`/dashboard?player1=${username}&position=${position}`);
       } catch (error) {
         console.error("Giriş hatası:", error);
         alert("Giriş yapılırken bir hata oluştu!");
@@ -143,6 +149,21 @@ export default function Login() {
                   }
                   required
                 />
+                <Select
+                  label="Pozisyonunu Seç"
+                  placeholder="Pozisyon seçin"
+                  selectedKeys={[position]}
+                  onChange={(e) => setPosition(e.target.value)}
+                  variant="bordered"
+                  labelPlacement="outside"
+                  className="w-full"
+                >
+                  {positions.map((pos) => (
+                    <SelectItem key={pos.value} value={pos.value}>
+                      {pos.label}
+                    </SelectItem>
+                  ))}
+                </Select>
                 <Button
                   type="submit"
                   color="primary"
