@@ -5,45 +5,53 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { auth } from './firebase/config';
+import { User } from 'firebase/auth';
 
 interface UserContextType {
-  currentUser: string | null;
-  logout: () => void;
-  setCurrentUser: (user: string) => void;
+  currentUser: User | null;
+  logout: () => Promise<void>;
+  setCurrentUser: (user: User | null) => void;
 }
 
 const UserContext = createContext<UserContextType>({
   currentUser: null,
-  logout: () => {},
+  logout: async () => {},
   setCurrentUser: () => {},
 });
 
 export const useUser = () => useContext(UserContext);
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user && pathname !== '/login') {
+      setCurrentUser(user);
+      setIsLoading(false);
+      
+      if (!user && !pathname.includes('/login')) {
         router.push('/login');
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, [router, pathname]);
 
-  const logout = () => {
-    setCurrentUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await auth.signOut();
+      setCurrentUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   if (isLoading) {
-    return null;
+    return <div>Loading...</div>;
   }
 
   return (
