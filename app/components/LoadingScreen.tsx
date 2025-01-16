@@ -86,6 +86,7 @@ export function LoadingScreen() {
               cy="60"
               r="3"
               fill="#FFFFFF"
+              initial={{ cx: 100, cy: 60 }}
               animate={{
                 cx: [100, 40, 160, 100],
                 cy: [60, 30, 90, 60],
@@ -94,7 +95,8 @@ export function LoadingScreen() {
                 duration: 2,
                 repeat: Infinity,
                 ease: "easeInOut",
-                immediateRender: true
+                immediateRender: true,
+                times: [0, 0.33, 0.66, 1]
               }}
             />
 
