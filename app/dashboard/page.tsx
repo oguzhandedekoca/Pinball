@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
 import { database } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { Users, LogOut, Table2, Trash2, Trophy } from 'lucide-react';
+import { Users, LogOut, Table2, Trash2, Trophy, CheckCircle2 } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
@@ -31,6 +31,12 @@ export default function Dashboard() {
   const { logout } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { 
+    isOpen: isSuccessOpen, 
+    onOpen: onSuccessOpen, 
+    onClose: onSuccessClose 
+  } = useDisclosure();
+  const [selectedTime, setSelectedTime] = useState<string>('');
 
   // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 37 }, (_, index) => {
@@ -101,26 +107,28 @@ export default function Dashboard() {
     if (selectedBox === null || !player1) return;
 
     try {
+      const selectedTimeSlot = timeSlots[selectedBox];
+      setSelectedTime(selectedTimeSlot);
+
       await addDoc(collection(database, 'selections'), {
         player1: player1,
         ...playerData,
-        selectedTime: timeSlots[selectedBox],
+        selectedTime: selectedTimeSlot,
         selectedBox: selectedBox,
         selectionTime: new Date().toISOString()
       });
 
-      // Yerel state'i güncelle
       setTimeSlotSelections(prev => ({
         ...prev,
         [selectedBox]: {
           player1: player1,
           ...playerData,
-          selectedTime: timeSlots[selectedBox],
+          selectedTime: selectedTimeSlot,
           selectedBox: selectedBox
         }
       }));
 
-      alert("Seçiminiz başarıyla kaydedildi!");
+      onSuccessOpen();
       setSelectedBox(null);
       setPlayerData({ player2: '', player3: '', player4: '' });
     } catch (error) {
@@ -282,6 +290,53 @@ export default function Dashboard() {
               >
                 <Trash2 size={20} />
                 İptal Et
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Başarılı Kayıt Modalı */}
+        <Modal 
+          isOpen={isSuccessOpen} 
+          onClose={onSuccessClose}
+          classNames={{
+            header: "dark:text-gray-200",
+            body: "dark:text-gray-300",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="flex gap-2 items-center text-green-600 dark:text-green-400">
+              <CheckCircle2 size={24} />
+              Başarılı!
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
+                    <Trophy size={40} className="text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                  Maç Kaydedildi!
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Randevunuz başarıyla oluşturuldu. İyi oyunlar!
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Seçilen Saat: <span className="font-semibold">{selectedTime}</span>
+                  </p>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="success"
+                variant="light"
+                onPress={onSuccessClose}
+                className="w-full"
+              >
+                Tamam
               </Button>
             </ModalFooter>
           </ModalContent>
