@@ -12,12 +12,12 @@ export function LoadingScreen() {
       >
         <div className="w-80 h-80 relative">
           <svg viewBox="0 0 200 120" className="w-full h-full">
-            {/* Masa Çerçevesi */}
+            {/* Masa Kenarları */}
             <rect
               x="10"
-              y="20"
+              y="10"
               width="180"
-              height="80"
+              height="100"
               rx="4"
               fill="#8B4513"
               className="dark:opacity-80"
@@ -26,64 +26,69 @@ export function LoadingScreen() {
             {/* Oyun Alanı */}
             <rect
               x="15"
-              y="25"
+              y="15"
               width="170"
-              height="70"
+              height="90"
               rx="2"
               fill="#0A8A30"
               className="dark:opacity-90"
             />
 
-            {/* Orta Çizgi */}
-            <line
-              x1="100"
-              y1="25"
-              x2="100"
-              y2="95"
-              stroke="white"
-              strokeWidth="2"
-              strokeDasharray="4"
-            />
+            {/* Langırt Çubukları (5 çubuk) */}
+            {[30, 65, 100, 135, 170].map((x, i) => (
+              <motion.g
+                key={i}
+                animate={{ rotate: [-10, 10, -10] }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeInOut",
+                  immediateRender: true
+                }}
+                style={{ originX: `${x}px`, originY: "60px" }}
+              >
+                <line
+                  x1={x}
+                  y1="15"
+                  x2={x}
+                  y2="105"
+                  stroke="#C0C0C0"
+                  strokeWidth="3"
+                />
+                {/* Her çubukta 2-4 oyuncu */}
+                {[...Array(i === 2 ? 4 : 3)].map((_, j) => (
+                  <g key={j}>
+                    <rect
+                      x={x-4}
+                      y={25 + j * 25}
+                      width="8"
+                      height="12"
+                      fill={i % 2 === 0 ? "#FF0000" : "#0000FF"}
+                      rx="1"
+                    />
+                    <rect
+                      x={x-2}
+                      y={25 + j * 25}
+                      width="4"
+                      height="12"
+                      fill={i % 2 === 0 ? "#FF4444" : "#4444FF"}
+                      rx="1"
+                    />
+                  </g>
+                ))}
+              </motion.g>
+            ))}
 
-            {/* Kaleler */}
-            <rect x="15" y="50" width="5" height="20" fill="white" opacity="0.8" />
-            <rect x="180" y="50" width="5" height="20" fill="white" opacity="0.8" />
-
-            {/* Merkez Daire */}
-            <circle cx="100" cy="60" r="15" stroke="white" strokeWidth="2" fill="none" opacity="0.5" />
-
-            {/* Dönen Kollar - Daha hızlı animasyon */}
-            <motion.g
-              animate={{ rotate: [0, 360] }}
-              transition={{ 
-                duration: 1.5, 
-                repeat: Infinity, 
-                ease: "linear",
-                immediateRender: true 
-              }}
-              style={{ originX: "100px", originY: "60px" }}
-            >
-              <line
-                x1="30"
-                y1="60"
-                x2="170"
-                y2="60"
-                stroke="#C0C0C0"
-                strokeWidth="3"
-              />
-              <circle cx="60" cy="60" r="5" fill="#FFD700" />
-              <circle cx="140" cy="60" r="5" fill="#FFD700" />
-            </motion.g>
-
-            {/* Hareketli Top - Daha hızlı animasyon */}
+            {/* Top */}
             <motion.circle
               cx="100"
               cy="60"
               r="3"
               fill="#FFFFFF"
               animate={{
-                cx: [100, 30, 170, 100],
-                cy: [60, 40, 80, 60],
+                cx: [100, 40, 160, 100],
+                cy: [60, 30, 90, 60],
               }}
               transition={{
                 duration: 2,
@@ -94,10 +99,10 @@ export function LoadingScreen() {
             />
 
             {/* Skor Göstergesi */}
-            <rect x="85" y="10" width="30" height="12" rx="2" fill="#333" />
+            <rect x="85" y="5" width="30" height="12" rx="2" fill="#333" />
             <motion.text
               x="92"
-              y="20"
+              y="14"
               fill="white"
               fontSize="10"
               animate={{ opacity: [1, 0.5, 1] }}
@@ -105,21 +110,10 @@ export function LoadingScreen() {
             >
               0 - 0
             </motion.text>
-
-            {/* Oyuncu Figürleri (Animasyonlu) */}
-            <motion.g
-              animate={{ y: [-2, 2, -2] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            >
-              <circle cx="60" cy="40" r="3" fill="#FF0000" />
-              <circle cx="60" cy="80" r="3" fill="#FF0000" />
-              <circle cx="140" cy="40" r="3" fill="#0000FF" />
-              <circle cx="140" cy="80" r="3" fill="#0000FF" />
-            </motion.g>
           </svg>
         </div>
 
-        {/* Loading Yazısı - Daha hızlı animasyon */}
+        {/* Loading Yazısı */}
         <div className="mt-8 text-center space-y-4">
           <motion.h2 
             className="text-2xl font-bold text-blue-600 dark:text-blue-400"
