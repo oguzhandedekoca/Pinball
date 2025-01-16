@@ -35,7 +35,7 @@ export function TimeSlotGrid({
             key={index}
             isPressable={isSelectable}
             onPress={() => isSelectable && onBoxSelect(index)}
-            className={`transition-all duration-300 relative group ${
+            className={`transition-all duration-300 relative group h-full ${
               isSelected 
                 ? 'border-4 border-blue-500 shadow-lg bg-blue-50 dark:bg-blue-900/20'
                 : existingSelection
@@ -43,35 +43,34 @@ export function TimeSlotGrid({
                 : 'hover:shadow-md hover:border-blue-200 dark:hover:border-blue-400'
             }`}
           >
-            <CardBody className="p-3">
-              <div className="flex flex-col">
-                <div className="text-center mb-2">
+            <CardBody className="p-3 h-full">
+              <div className="flex flex-col h-full">
+                <div className="text-center mb-4">
                   <p className="font-bold text-gray-600 dark:text-gray-300 text-sm">Masa Saati</p>
                   <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                     {timeSlots[index]}
                   </p>
                 </div>
                 {existingSelection ? (
-                  <div>
+                  <div className="flex-1 flex flex-col justify-center">
                     <div className="grid grid-cols-2 gap-2">
                       {/* 1. Takım */}
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
-                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">1. Takım</p>
-                        <div className="space-y-1">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">1. Takım</p>
+                        <div className="space-y-2">
                           <p className="text-xs text-gray-700 dark:text-gray-300">🧤 {existingSelection.player1}</p>
                           <p className="text-xs text-gray-700 dark:text-gray-300">🎯 {existingSelection.player2}</p>
                         </div>
                       </div>
                       {/* 2. Takım */}
-                      <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">
-                        <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">2. Takım</p>
-                        <div className="space-y-1">
+                      <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                        <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-2">2. Takım</p>
+                        <div className="space-y-2">
                           <p className="text-xs text-gray-700 dark:text-gray-300">🧤 {existingSelection.player3}</p>
                           <p className="text-xs text-gray-700 dark:text-gray-300">🎯 {existingSelection.player4}</p>
                         </div>
                       </div>
                     </div>
-                    {/* Silme butonu - sadece hover durumunda ve yetkili kullanıcı için görünür */}
                     {canDelete && (
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <Tooltip content="Bu maçı iptal et">
@@ -90,9 +89,9 @@ export function TimeSlotGrid({
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Müsait Masa</p>
-                    <div className="text-2xl mt-2">🎮</div>
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Müsait Masa</p>
+                    <div className="text-2xl">🎮</div>
                   </div>
                 )}
               </div>
