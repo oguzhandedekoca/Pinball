@@ -30,7 +30,6 @@ export default function Dashboard() {
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
   const { logout } = useUser();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const { 
     isOpen: isSuccessOpen, 
     onOpen: onSuccessOpen, 
@@ -50,48 +49,38 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    // Kullanıcının authentication durumunu kontrol et
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
-        // Kullanıcı giriş yapmamışsa login sayfasına yönlendir
         router.push('/login');
       } else {
         setIsAuthenticated(true);
         setCurrentUserUid(user.uid);
-        setIsLoading(false);
+        fetchSelections().then(() => {
+          setIsLoading(false);
+        });
       }
     });
 
     return () => unsubscribe();
   }, [router]);
 
-  // Mevcut seçimleri Firebase'den çek
-  useEffect(() => {
-    const fetchSelections = async () => {
-      try {
-        const selectionsRef = collection(database, 'selections');
-        const querySnapshot = await getDocs(selectionsRef);
-        const selections: { [key: number]: TimeSlotData & { createdBy?: string } } = {};
-        
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as TimeSlotData & { createdBy?: string };
-          selections[data.selectedBox] = data;
-        });
-        
-        setTimeSlotSelections(selections);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching selections:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchSelections();
-  }, []);
+  // Seçimleri getiren fonksiyon
+  const fetchSelections = async () => {
+    try {
+      const selectionsRef = collection(database, 'selections');
+      const querySnapshot = await getDocs(selectionsRef);
+      const selections: { [key: number]: TimeSlotData & { createdBy?: string } } = {};
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as TimeSlotData & { createdBy?: string };
+        selections[data.selectedBox] = data;
+      });
+      
+      setTimeSlotSelections(selections);
+    } catch (error) {
+      console.error("Error fetching selections:", error);
+    }
+  };
 
   const handlePlayerDataChange = (field: keyof PlayerData, value: string) => {
     setPlayerData(prev => ({
@@ -180,8 +169,7 @@ export default function Dashboard() {
     }
   };
 
-  if (!mounted) return null;
-
+  // Loading ekranını göster
   if (isLoading) {
     return <LoadingScreen />;
   }
