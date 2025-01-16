@@ -22,7 +22,7 @@ export function LoadingScreen() {
               fill="#8B4513"
               className="dark:opacity-80"
             />
-            
+
             {/* Oyun Alanı */}
             <rect
               x="15"
@@ -60,7 +60,7 @@ export function LoadingScreen() {
                 {[...Array(i === 2 ? 4 : 3)].map((_, j) => (
                   <g key={j}>
                     <rect
-                      x={x-4}
+                      x={x - 4}
                       y={25 + j * 25}
                       width="8"
                       height="12"
@@ -68,7 +68,7 @@ export function LoadingScreen() {
                       rx="1"
                     />
                     <rect
-                      x={x-2}
+                      x={x - 2}
                       y={25 + j * 25}
                       width="4"
                       height="12"
@@ -115,13 +115,13 @@ export function LoadingScreen() {
 
         {/* Loading Yazısı */}
         <div className="mt-8 text-center space-y-4">
-          <motion.h2 
+          <motion.h2
             className="text-2xl font-bold text-blue-600 dark:text-blue-400"
             animate={{ scale: [1, 1.05, 1] }}
-            transition={{ 
-              duration: 0.8, 
+            transition={{
+              duration: 0.8,
               repeat: Infinity,
-              immediateRender: true 
+              immediateRender: true
             }}
           >
             Yükleniyor...
@@ -130,30 +130,30 @@ export function LoadingScreen() {
             <motion.div
               className="w-3 h-3 rounded-full bg-blue-500"
               animate={{ y: [-4, 4, -4] }}
-              transition={{ 
-                duration: 0.4, 
+              transition={{
+                duration: 0.4,
                 repeat: Infinity,
-                immediateRender: true 
+                immediateRender: true
               }}
             />
             <motion.div
               className="w-3 h-3 rounded-full bg-green-500"
               animate={{ y: [-4, 4, -4] }}
-              transition={{ 
-                duration: 0.4, 
+              transition={{
+                duration: 0.4,
                 repeat: Infinity,
                 delay: 0.1,
-                immediateRender: true 
+                immediateRender: true
               }}
             />
             <motion.div
               className="w-3 h-3 rounded-full bg-red-500"
               animate={{ y: [-4, 4, -4] }}
-              transition={{ 
-                duration: 0.4, 
+              transition={{
+                duration: 0.4,
                 repeat: Infinity,
                 delay: 0.2,
-                immediateRender: true 
+                immediateRender: true
               }}
             />
           </div>
