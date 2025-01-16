@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { auth } from './firebase/config';
 import { User } from 'firebase/auth';
+import { LoadingScreen } from './components/LoadingScreen';
 
 interface UserContextType {
   currentUser: User | null;
@@ -23,22 +24,9 @@ export const useUser = () => useContext(UserContext);
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
-      setIsLoading(false);
-      
-      if (!user && !pathname.includes('/login')) {
-        router.push('/login');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router, pathname]);
 
   const logout = async () => {
     try {
@@ -50,8 +38,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      
+      // Minimum 1 saniyelik loading süresi
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+      
+      if (!user && !pathname.includes('/login')) {
+        router.push('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router, pathname]);
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   return (
