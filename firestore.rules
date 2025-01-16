@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users koleksiyonu için kurallar
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Selections koleksiyonu için kurallar
+    match /selections/{selectionId} {
+      allow read: if request.auth != null;
+      // Sadece kendi oluşturduğu rezervasyonu silebilir
+      allow delete: if request.auth != null && resource.data.createdBy == request.auth.uid;
+      // Yeni rezervasyon oluşturabilir
+      allow create: if request.auth != null;
+    }
+  }
+} 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
-import { database } from '../firebase/config';
+import { database, auth } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { Users, LogOut, Table2, Trash2, Trophy, CheckCircle2 } from 'lucide-react';
 import { useUser } from '../providers';
@@ -24,7 +24,7 @@ export default function Dashboard() {
     player4: '',
   });
   const [selectedBox, setSelectedBox] = useState<number | null>(null);
-  const [timeSlotSelections, setTimeSlotSelections] = useState<{ [key: number]: TimeSlotData }>({});
+  const [timeSlotSelections, setTimeSlotSelections] = useState<{ [key: number]: TimeSlotData & { createdBy?: string } }>({});
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
@@ -37,6 +37,7 @@ export default function Dashboard() {
     onClose: onSuccessClose 
   } = useDisclosure();
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
 
   // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 37 }, (_, index) => {
@@ -50,19 +51,32 @@ export default function Dashboard() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    // Kullanıcının authentication durumunu kontrol et
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUserUid(user.uid);
+      } else {
+        setCurrentUserUid(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Mevcut seçimleri Firebase'den çek
   useEffect(() => {
     const fetchSelections = async () => {
       try {
         const selectionsRef = collection(database, 'selections');
         const querySnapshot = await getDocs(selectionsRef);
-        const selections: { [key: number]: TimeSlotData } = {};
-
+        const selections: { [key: number]: TimeSlotData & { createdBy?: string } } = {};
+        
         querySnapshot.forEach((doc) => {
-          const data = doc.data() as TimeSlotData;
+          const data = doc.data() as TimeSlotData & { createdBy?: string };
           selections[data.selectedBox] = data;
         });
-
+        
         setTimeSlotSelections(selections);
         setIsLoading(false);
       } catch (error) {
@@ -104,7 +118,7 @@ export default function Dashboard() {
   };
 
   const handleConfirmSelection = async () => {
-    if (selectedBox === null || !player1) return;
+    if (selectedBox === null || !player1 || !currentUserUid) return;
 
     try {
       const selectedTimeSlot = timeSlots[selectedBox];
@@ -115,7 +129,8 @@ export default function Dashboard() {
         ...playerData,
         selectedTime: selectedTimeSlot,
         selectedBox: selectedBox,
-        selectionTime: new Date().toISOString()
+        selectionTime: new Date().toISOString(),
+        createdBy: currentUserUid // Oluşturan kullanıcının ID'sini kaydet
       });
 
       setTimeSlotSelections(prev => ({
@@ -238,10 +253,17 @@ export default function Dashboard() {
           timeSlotSelections={timeSlotSelections}
           onBoxSelect={handleBoxSelection}
           onDeleteClick={(index) => {
-            setSelectedBoxForDelete(index);
-            onOpen();
+            // Sadece oluşturan kullanıcı silebilir
+            const selection = timeSlotSelections[index];
+            if (selection.createdBy === currentUserUid) {
+              setSelectedBoxForDelete(index);
+              onOpen();
+            } else {
+              alert("Bu rezervasyonu sadece oluşturan kullanıcı silebilir!");
+            }
           }}
           isTimeSlotSelectable={isTimeSlotSelectable}
+          currentUserUid={currentUserUid}
         />
 
         {/* Onay Butonu */}

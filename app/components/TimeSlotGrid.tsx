@@ -10,6 +10,7 @@ interface TimeSlotGridProps {
   onBoxSelect: (index: number) => void;
   onDeleteClick: (index: number) => void;
   isTimeSlotSelectable: (index: number) => boolean;
+  currentUserUid: string | null;
 }
 
 export function TimeSlotGrid({
@@ -18,7 +19,8 @@ export function TimeSlotGrid({
   timeSlotSelections,
   onBoxSelect,
   onDeleteClick,
-  isTimeSlotSelectable
+  isTimeSlotSelectable,
+  currentUserUid
 }: TimeSlotGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -68,7 +70,7 @@ export function TimeSlotGrid({
                         </div>
                       </div>
                     </div>
-                    <div className="mt-2 flex justify-end">
+                    {existingSelection && existingSelection.createdBy === currentUserUid && (
                       <Tooltip content="Bu maçı iptal et">
                         <Button
                           isIconOnly
@@ -80,7 +82,7 @@ export function TimeSlotGrid({
                           <Trash2 size={14} />
                         </Button>
                       </Tooltip>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-4">

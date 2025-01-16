@@ -4,10 +4,12 @@ import { database } from '../firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem } from "@nextui-org/react";
-import { Trophy, Users, Table2, Timer, Gamepad2 } from 'lucide-react';
+import { Trophy, Users, Table2, Timer, Gamepad2, Mail, Lock } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -17,6 +19,8 @@ export default function Login() {
   const { setCurrentUser } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const positions = [
     { label: "Kaleci 🧤", value: "kaleci" },
@@ -31,12 +35,46 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim()) {
+    if (username.trim() && email && password) {
       setIsLoading(true);
       try {
-        await addDoc(collection(database, 'users'), {
+        let userCredential;
+        try {
+          // Önce giriş yapmayı dene
+          userCredential = await signInWithEmailAndPassword(auth, email, password);
+        } catch (error: any) {
+          if (error.code === 'auth/user-not-found') {
+            // Kullanıcı yoksa yeni hesap oluştur
+            try {
+              userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            } catch (createError: any) {
+              if (createError.code === 'auth/email-already-in-use') {
+                alert('Bu e-posta adresi zaten kullanımda!');
+              } else if (createError.code === 'auth/weak-password') {
+                alert('Şifre en az 6 karakter olmalıdır!');
+              } else {
+                alert('Hesap oluşturulurken bir hata oluştu!');
+              }
+              setIsLoading(false);
+              return;
+            }
+          } else if (error.code === 'auth/wrong-password') {
+            alert('Hatalı şifre!');
+            setIsLoading(false);
+            return;
+          } else {
+            alert('Giriş yapılırken bir hata oluştu!');
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Firestore'a kullanıcı bilgilerini kaydet
+        const userDoc = await addDoc(collection(database, 'users'), {
+          uid: userCredential.user.uid,
           username: username,
           position: position,
+          email: email,
           loginTime: new Date().toISOString()
         });
 
@@ -149,8 +187,31 @@ export default function Login() {
                   }
                   required
                 />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="E-posta adresiniz"
+                  variant="bordered"
+                  labelPlacement="outside"
+                  startContent={
+                    <Mail className="text-gray-400" size={18} />
+                  }
+                  required
+                />
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Şifreniz (en az 6 karakter)"
+                  variant="bordered"
+                  labelPlacement="outside"
+                  startContent={
+                    <Lock className="text-gray-400" size={18} />
+                  }
+                  required
+                />
                 <Select
-                  label="Pozisyonunu Seç"
                   placeholder="Pozisyon seçin"
                   selectedKeys={[position]}
                   onChange={(e) => setPosition(e.target.value)}
