@@ -28,18 +28,19 @@ export function TimeSlotGrid({
         const isSelected = selectedBox === index;
         const existingSelection = timeSlotSelections[index];
         const isSelectable = isTimeSlotSelectable(index);
+        const canDelete = existingSelection?.createdBy === currentUserUid;
 
         return (
           <Card
             key={index}
             isPressable={isSelectable}
             onPress={() => isSelectable && onBoxSelect(index)}
-            className={`transition-all duration-300 ${
+            className={`transition-all duration-300 relative group ${
               isSelected 
-                ? 'border-4 border-blue-500 scale-105 shadow-lg bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-4 border-blue-500 shadow-lg bg-blue-50 dark:bg-blue-900/20'
                 : existingSelection
-                ? 'opacity-90 bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 cursor-not-allowed'
-                : 'hover:scale-102 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-400'
+                ? 'opacity-90 bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700'
+                : 'hover:shadow-md hover:border-blue-200 dark:hover:border-blue-400'
             }`}
           >
             <CardBody className="p-3">
@@ -70,8 +71,9 @@ export function TimeSlotGrid({
                         </div>
                       </div>
                     </div>
-                    {existingSelection.createdBy === currentUserUid && (
-                      <div className="mt-2 flex justify-end">
+                    {/* Silme butonu - sadece hover durumunda ve yetkili kullanıcı için görünür */}
+                    {canDelete && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <Tooltip content="Bu maçı iptal et">
                           <Button
                             isIconOnly
@@ -79,7 +81,7 @@ export function TimeSlotGrid({
                             variant="light"
                             size="sm"
                             onPress={() => onDeleteClick(index)}
-                            className="hover:bg-red-100 dark:hover:bg-red-900/30"
+                            className="bg-white/80 dark:bg-gray-800/80 hover:bg-red-100 dark:hover:bg-red-900/30"
                           >
                             <Trash2 size={14} className="text-red-500 dark:text-red-400" />
                           </Button>
