@@ -70,18 +70,21 @@ export function TimeSlotGrid({
                         </div>
                       </div>
                     </div>
-                    {existingSelection && existingSelection.createdBy === currentUserUid && (
-                      <Tooltip content="Bu maçı iptal et">
-                        <Button
-                          isIconOnly
-                          color="danger"
-                          variant="light"
-                          size="sm"
-                          onPress={() => onDeleteClick(index)}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </Tooltip>
+                    {existingSelection.createdBy === currentUserUid && (
+                      <div className="mt-2 flex justify-end">
+                        <Tooltip content="Bu maçı iptal et">
+                          <Button
+                            isIconOnly
+                            color="danger"
+                            variant="light"
+                            size="sm"
+                            onPress={() => onDeleteClick(index)}
+                            className="hover:bg-red-100 dark:hover:bg-red-900/30"
+                          >
+                            <Trash2 size={14} className="text-red-500 dark:text-red-400" />
+                          </Button>
+                        </Tooltip>
+                      </div>
                     )}
                   </div>
                 ) : (

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { database } from '../firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem } from "@nextui-org/react";
+import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem, Tooltip } from "@nextui-org/react";
 import { Trophy, Users, Table2, Timer, Gamepad2, Mail, Lock } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
@@ -21,6 +21,7 @@ export default function Login() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   const positions = [
     { label: "Kaleci 🧤", value: "kaleci" },
@@ -33,6 +34,11 @@ export default function Login() {
 
   if (!mounted) return null;
 
+  const showToast = (message: string) => {
+    setToast({ show: true, message });
+    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim() && email && password) {
@@ -40,30 +46,28 @@ export default function Login() {
       try {
         let userCredential;
         try {
-          // Önce giriş yapmayı dene
           userCredential = await signInWithEmailAndPassword(auth, email, password);
         } catch (error: any) {
           if (error.code === 'auth/user-not-found') {
-            // Kullanıcı yoksa yeni hesap oluştur
             try {
               userCredential = await createUserWithEmailAndPassword(auth, email, password);
             } catch (createError: any) {
               if (createError.code === 'auth/email-already-in-use') {
-                alert('Bu e-posta adresi zaten kullanımda!');
+                showToast('Bu e-posta adresi zaten kullanımda!');
               } else if (createError.code === 'auth/weak-password') {
-                alert('Şifre en az 6 karakter olmalıdır!');
+                showToast('Şifre en az 6 karakter olmalıdır!');
               } else {
-                alert('Hesap oluşturulurken bir hata oluştu!');
+                showToast('Hesap oluşturulurken bir hata oluştu!');
               }
               setIsLoading(false);
               return;
             }
           } else if (error.code === 'auth/wrong-password') {
-            alert('Hatalı şifre!');
+            showToast('Hatalı şifre!');
             setIsLoading(false);
             return;
           } else {
-            alert('Giriş yapılırken bir hata oluştu!');
+            showToast('Giriş yapılırken bir hata oluştu!');
             setIsLoading(false);
             return;
           }
@@ -245,6 +249,17 @@ export default function Login() {
         <div className="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-gray-500 dark:text-gray-400">
           © 2025 Langırt Randevu Sistemi. Tüm hakları saklıdır.
         </div>
+      </div>
+
+      {/* Toast Notification */}
+      <div className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
+        toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+      }`}>
+        <Card className="bg-red-500 text-white">
+          <CardBody className="py-2 px-4">
+            <p>{toast.message}</p>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );
