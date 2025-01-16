@@ -2,8 +2,9 @@
 
 import { NextUIProvider } from '@nextui-org/react';
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { auth } from './firebase/config';
 
 interface UserContextType {
   currentUser: string | null;
@@ -22,18 +23,28 @@ export const useUser = () => useContext(UserContext);
 export function Providers({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user && pathname !== '/login') {
+        router.push('/login');
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router, pathname]);
 
   const logout = () => {
     setCurrentUser(null);
     router.push('/login');
   };
 
-  if (!mounted) return null;
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <NextThemesProvider attribute="class" defaultTheme="light">

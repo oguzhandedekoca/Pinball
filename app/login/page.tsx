@@ -4,7 +4,7 @@ import { database } from '../firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem, Tooltip } from "@nextui-org/react";
-import { Trophy, Users, Table2, Timer, Gamepad2, Mail, Lock } from 'lucide-react';
+import { Trophy, Users, Table2, Timer, Gamepad2, Mail, Lock, XCircle, CheckCircle } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function Login() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '' });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
   const positions = [
     { label: "Kaleci 🧤", value: "kaleci" },
@@ -34,9 +34,27 @@ export default function Login() {
 
   if (!mounted) return null;
 
-  const showToast = (message: string) => {
-    setToast({ show: true, message });
-    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 3000);
+  };
+
+  const getErrorMessage = (errorCode: string, message: string) => {
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı';
+      case 'auth/wrong-password':
+        return 'Hatalı şifre girdiniz';
+      case 'auth/email-already-in-use':
+        return 'Bu e-posta adresi zaten kullanımda';
+      case 'auth/weak-password':
+        return 'Şifre en az 6 karakter olmalıdır';
+      case 'auth/invalid-credential':
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'E-posta veya şifre hatalı';
+      default:
+        return message || 'Bir hata oluştu';
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -48,29 +66,11 @@ export default function Login() {
         try {
           userCredential = await signInWithEmailAndPassword(auth, email, password);
         } catch (error: any) {
-          if (error.code === 'auth/user-not-found') {
-            try {
-              userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            } catch (createError: any) {
-              if (createError.code === 'auth/email-already-in-use') {
-                showToast('Bu e-posta adresi zaten kullanımda!');
-              } else if (createError.code === 'auth/weak-password') {
-                showToast('Şifre en az 6 karakter olmalıdır!');
-              } else {
-                showToast('Hesap oluşturulurken bir hata oluştu!');
-              }
-              setIsLoading(false);
-              return;
-            }
-          } else if (error.code === 'auth/wrong-password') {
-            showToast('Hatalı şifre!');
-            setIsLoading(false);
-            return;
-          } else {
-            showToast('Giriş yapılırken bir hata oluştu!');
-            setIsLoading(false);
-            return;
-          }
+          const errorMessage = getErrorMessage(error.code, error.message);
+          showToast(errorMessage);
+          console.error('Login error:', error);
+          setIsLoading(false);
+          return;
         }
 
         // Firestore'a kullanıcı bilgilerini kaydet
@@ -86,7 +86,7 @@ export default function Login() {
         router.push(`/dashboard?player1=${username}&position=${position}`);
       } catch (error) {
         console.error("Giriş hatası:", error);
-        alert("Giriş yapılırken bir hata oluştu!");
+        showToast('Giriş yapılırken bir hata oluştu!');
       } finally {
         setIsLoading(false);
       }
@@ -255,9 +255,18 @@ export default function Login() {
       <div className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
         toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}>
-        <Card className="bg-red-500 text-white">
-          <CardBody className="py-2 px-4">
-            <p>{toast.message}</p>
+        <Card className={`${
+          toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+        } text-white shadow-lg`}>
+          <CardBody className="py-3 px-4">
+            <div className="flex items-center gap-2">
+              {toast.type === 'error' ? (
+                <XCircle size={20} />
+              ) : (
+                <CheckCircle size={20} />
+              )}
+              <p className="font-medium">{toast.message}</p>
+            </div>
           </CardBody>
         </Card>
       </div>

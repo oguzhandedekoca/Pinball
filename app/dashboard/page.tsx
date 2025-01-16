@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Card, CardBody } from "@nextui-org/react";
 import { database, auth } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { Users, LogOut, Table2, Trash2, Trophy, CheckCircle2 } from 'lucide-react';
@@ -38,6 +38,8 @@ export default function Dashboard() {
   } = useDisclosure();
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Zaman dilimlerini oluştur
   const timeSlots = Array.from({ length: 37 }, (_, index) => {
@@ -54,15 +56,18 @@ export default function Dashboard() {
   useEffect(() => {
     // Kullanıcının authentication durumunu kontrol et
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setCurrentUserUid(user.uid);
+      if (!user) {
+        // Kullanıcı giriş yapmamışsa login sayfasına yönlendir
+        router.push('/login');
       } else {
-        setCurrentUserUid(null);
+        setIsAuthenticated(true);
+        setCurrentUserUid(user.uid);
+        setIsLoading(false);
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   // Mevcut seçimleri Firebase'den çek
   useEffect(() => {
@@ -177,20 +182,30 @@ export default function Dashboard() {
 
   if (!mounted) return null;
 
-  if (!player1) {
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated || !player1) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardBody>
-            <p className="text-lg">Lütfen önce giriş yapın</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <Card className="w-full max-w-md">
+          <CardBody className="text-center p-6">
+            <h2 className="text-xl font-semibold mb-4">Erişim Engellendi</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Bu sayfayı görüntülemek için giriş yapmanız gerekmektedir.
+            </p>
+            <Button 
+              color="primary" 
+              onClick={() => router.push('/login')}
+              className="w-full"
+            >
+              Giriş Yap
+            </Button>
           </CardBody>
         </Card>
       </div>
     );
-  }
-
-  if (isLoading) {
-    return <LoadingScreen />;
   }
 
   return (
