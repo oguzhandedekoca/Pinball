@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
 import { database } from '../firebase/config';
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { Users, LogOut, Table2, Trash2 } from 'lucide-react';
+import { Users, LogOut, Table2, Trash2, Trophy } from 'lucide-react';
 import { useUser } from '../providers';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function Dashboard() {
   const [selectedBox, setSelectedBox] = useState<number | null>(null);
   const [timeSlotSelections, setTimeSlotSelections] = useState<{ [key: number]: TimeSlotData }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const {isOpen, onOpen, onClose} = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
   const { logout } = useUser();
   const { theme, setTheme } = useTheme();
@@ -51,12 +51,12 @@ export default function Dashboard() {
         const selectionsRef = collection(database, 'selections');
         const querySnapshot = await getDocs(selectionsRef);
         const selections: { [key: number]: TimeSlotData } = {};
-        
+
         querySnapshot.forEach((doc) => {
           const data = doc.data() as TimeSlotData;
           selections[data.selectedBox] = data;
         });
-        
+
         setTimeSlotSelections(selections);
         setIsLoading(false);
       } catch (error) {
@@ -134,7 +134,7 @@ export default function Dashboard() {
       const selectionsRef = collection(database, 'selections');
       const q = query(selectionsRef, where('selectedBox', '==', boxIndex));
       const querySnapshot = await getDocs(q);
-      
+
       querySnapshot.forEach(async (document) => {
         await deleteDoc(doc(database, 'selections', document.id));
       });
@@ -153,7 +153,7 @@ export default function Dashboard() {
   };
 
   if (!mounted) return null;
-  
+
   if (!player1) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -201,9 +201,9 @@ export default function Dashboard() {
             <Button
               color="danger"
               variant="flat"
-              startContent={<LogOut size={20} />}
               onPress={logout}
             >
+              <LogOut size={20} />
               Çıkış Yap
             </Button>
           </div>
@@ -211,20 +211,20 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
-        <StatsCards 
+        <StatsCards
           totalBookings={Object.keys(timeSlotSelections).length}
           availableSlots={37 - Object.keys(timeSlotSelections).length}
           totalPlayers={Object.values(timeSlotSelections).length * 4}
         />
 
-        <PlayerForm 
+        <PlayerForm
           player1={player1 || ''}
           position={position || 'kaleci'}
           playerData={playerData}
           onPlayerDataChange={handlePlayerDataChange}
         />
 
-        <TimeSlotGrid 
+        <TimeSlotGrid
           timeSlots={timeSlots}
           selectedBox={selectedBox}
           timeSlotSelections={timeSlotSelections}
@@ -244,16 +244,16 @@ export default function Dashboard() {
               size="lg"
               onClick={handleConfirmSelection}
               className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700"
-              startContent={<Trophy size={20} />}
             >
+              <Trophy size={20} />
               Maçı Kaydet
             </Button>
           </div>
         )}
 
         {/* Modal */}
-        <Modal 
-          isOpen={isOpen} 
+        <Modal
+          isOpen={isOpen}
           onClose={onClose}
           classNames={{
             header: "dark:text-gray-200",
@@ -272,15 +272,15 @@ export default function Dashboard() {
               <Button variant="flat" onPress={onClose}>
                 Vazgeç
               </Button>
-              <Button 
-                color="danger" 
+              <Button
+                color="danger"
                 onPress={() => {
                   if (selectedBoxForDelete !== null) {
                     handleDeleteTimeSlot(selectedBoxForDelete);
                   }
                 }}
-                startContent={<Trash2 size={20} />}
               >
+                <Trash2 size={20} />
                 İptal Et
               </Button>
             </ModalFooter>
