@@ -19,3 +19,7 @@ body {
   background: var(--background);
   font-family: 'Poppins', sans-serif;
 }
+
+[data-has-label="true"] {
+  margin-top: calc(var(--nextui-font-size-small) + 15px) !important;
+}
