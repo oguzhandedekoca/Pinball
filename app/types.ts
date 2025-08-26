@@ -6,10 +6,11 @@ export interface PlayerData {
 }
 
 export interface TimeSlotData {
+  createdBy?: string | null;
   player1: string;
   player2: string;
   player3: string;
   player4: string;
   selectedTime: string;
   selectedBox: number;
-} 
+}

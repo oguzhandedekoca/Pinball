@@ -1,41 +1,70 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Card, CardBody } from "@nextui-org/react";
-import { database, auth } from '../firebase/config';
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
-import { Users, LogOut, Table2, Trash2, Trophy, CheckCircle2 } from 'lucide-react';
-import { useUser } from '../providers';
-import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
-import { StatsCards } from '../components/StatsCards';
-import { PlayerForm } from '../components/PlayerForm';
-import { TimeSlotGrid } from '../components/TimeSlotGrid';
-import { PlayerData, TimeSlotData } from '../types';
-import { LoadingScreen } from '../components/LoadingScreen';
+"use client";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Card,
+  CardBody,
+} from "@nextui-org/react";
+import { database, auth } from "../firebase/config";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import {
+  Users,
+  LogOut,
+  Table2,
+  Trash2,
+  Trophy,
+  CheckCircle2,
+} from "lucide-react";
+import { useUser } from "../providers";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
+import { StatsCards } from "../components/StatsCards";
+import { PlayerForm } from "../components/PlayerForm";
+import { TimeSlotGrid } from "../components/TimeSlotGrid";
+import { PlayerData, TimeSlotData } from "../types";
+import { LoadingScreen } from "../components/LoadingScreen";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
-  const player1 = searchParams.get('player1');
-  const position = searchParams.get('position');
+  const player1 = searchParams.get("player1");
+  const position = searchParams.get("position");
   const [playerData, setPlayerData] = useState<PlayerData>({
-    player2: '',
-    player3: '',
-    player4: '',
+    player2: "",
+    player3: "",
+    player4: "",
   });
   const [selectedBox, setSelectedBox] = useState<number | null>(null);
-  const [timeSlotSelections, setTimeSlotSelections] = useState<{ [key: number]: TimeSlotData & { createdBy?: string } }>({});
+  const [timeSlotSelections, setTimeSlotSelections] = useState<{
+    [key: number]: TimeSlotData;
+  }>({});
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<number | null>(null);
+  const [selectedBoxForDelete, setSelectedBoxForDelete] = useState<
+    number | null
+  >(null);
   const { logout } = useUser();
   const { theme, setTheme } = useTheme();
-  const { 
-    isOpen: isSuccessOpen, 
-    onOpen: onSuccessOpen, 
-    onClose: onSuccessClose 
+  const {
+    isOpen: isSuccessOpen,
+    onOpen: onSuccessOpen,
+    onClose: onSuccessClose,
   } = useDisclosure();
-  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>("");
   const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -44,14 +73,17 @@ export default function Dashboard() {
   const timeSlots = Array.from({ length: 37 }, (_, index) => {
     const baseTime = new Date();
     baseTime.setHours(9, 0, 0, 0);
-    baseTime.setMinutes(baseTime.getMinutes() + (index * 15));
-    return baseTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    baseTime.setMinutes(baseTime.getMinutes() + index * 15);
+    return baseTime.toLocaleTimeString("tr-TR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   });
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
-        router.push('/login');
+        router.push("/login");
       } else {
         setIsAuthenticated(true);
         setCurrentUserUid(user.uid);
@@ -67,15 +99,15 @@ export default function Dashboard() {
   // Seçimleri getiren fonksiyon
   const fetchSelections = async () => {
     try {
-      const selectionsRef = collection(database, 'selections');
+      const selectionsRef = collection(database, "selections");
       const querySnapshot = await getDocs(selectionsRef);
-      const selections: { [key: number]: TimeSlotData & { createdBy?: string } } = {};
-      
+      const selections: { [key: number]: TimeSlotData } = {};
+
       querySnapshot.forEach((doc) => {
-        const data = doc.data() as TimeSlotData & { createdBy?: string };
+        const data = doc.data() as TimeSlotData;
         selections[data.selectedBox] = data;
       });
-      
+
       setTimeSlotSelections(selections);
     } catch (error) {
       console.error("Error fetching selections:", error);
@@ -83,9 +115,9 @@ export default function Dashboard() {
   };
 
   const handlePlayerDataChange = (field: keyof PlayerData, value: string) => {
-    setPlayerData(prev => ({
+    setPlayerData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -118,28 +150,28 @@ export default function Dashboard() {
       const selectedTimeSlot = timeSlots[selectedBox];
       setSelectedTime(selectedTimeSlot);
 
-      await addDoc(collection(database, 'selections'), {
+      await addDoc(collection(database, "selections"), {
         player1: player1,
         ...playerData,
         selectedTime: selectedTimeSlot,
         selectedBox: selectedBox,
         selectionTime: new Date().toISOString(),
-        createdBy: currentUserUid // Oluşturan kullanıcının ID'sini kaydet
+        createdBy: currentUserUid, // Oluşturan kullanıcının ID'sini kaydet
       });
 
-      setTimeSlotSelections(prev => ({
+      setTimeSlotSelections((prev) => ({
         ...prev,
         [selectedBox]: {
           player1: player1,
           ...playerData,
           selectedTime: selectedTimeSlot,
-          selectedBox: selectedBox
-        }
+          selectedBox: selectedBox,
+        },
       }));
 
       onSuccessOpen();
       setSelectedBox(null);
-      setPlayerData({ player2: '', player3: '', player4: '' });
+      setPlayerData({ player2: "", player3: "", player4: "" });
     } catch (error) {
       console.error("Error saving selection:", error);
       alert("Seçim kaydedilirken bir hata oluştu!");
@@ -148,12 +180,12 @@ export default function Dashboard() {
 
   const handleDeleteTimeSlot = async (boxIndex: number) => {
     try {
-      const selectionsRef = collection(database, 'selections');
-      const q = query(selectionsRef, where('selectedBox', '==', boxIndex));
+      const selectionsRef = collection(database, "selections");
+      const q = query(selectionsRef, where("selectedBox", "==", boxIndex));
       const querySnapshot = await getDocs(q);
 
       querySnapshot.forEach(async (document) => {
-        await deleteDoc(doc(database, 'selections', document.id));
+        await deleteDoc(doc(database, "selections", document.id));
       });
 
       // Yerel state'i güncelle
@@ -183,9 +215,9 @@ export default function Dashboard() {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Bu sayfayı görüntülemek için giriş yapmanız gerekmektedir.
             </p>
-            <Button 
-              color="primary" 
-              onClick={() => router.push('/login')}
+            <Button
+              color="primary"
+              onClick={() => router.push("/login")}
               className="w-full"
             >
               Giriş Yap
@@ -203,32 +235,30 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Table2 className="text-blue-600 dark:text-blue-400" size={24} />
-            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Langırt Randevu Sistemi</h1>
+            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              Langırt Randevu Sistemi
+            </h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-blue-50 dark:bg-gray-800 px-4 py-2 rounded-lg">
               <Users size={20} className="text-blue-600 dark:text-blue-400" />
               <span className="font-medium text-blue-600 dark:text-blue-400">
-                Hoş geldin, {player1} ({position === 'kaleci' ? '🧤' : '🎯'})
+                Hoş geldin, {player1} ({position === "kaleci" ? "🧤" : "🎯"})
               </span>
             </div>
             <Button
               isIconOnly
               variant="light"
-              onPress={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onPress={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="min-w-unit-10"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun className="text-yellow-400" size={24} />
               ) : (
                 <Moon className="text-gray-600" size={24} />
               )}
             </Button>
-            <Button
-              color="danger"
-              variant="flat"
-              onPress={logout}
-            >
+            <Button color="danger" variant="flat" onPress={logout}>
               <LogOut size={20} />
               Çıkış Yap
             </Button>
@@ -244,8 +274,8 @@ export default function Dashboard() {
         />
 
         <PlayerForm
-          player1={player1 || ''}
-          position={position || 'kaleci'}
+          player1={player1 || ""}
+          position={position || "kaleci"}
           playerData={playerData}
           onPlayerDataChange={handlePlayerDataChange}
         />
@@ -321,8 +351,8 @@ export default function Dashboard() {
         </Modal>
 
         {/* Başarılı Kayıt Modalı */}
-        <Modal 
-          isOpen={isSuccessOpen} 
+        <Modal
+          isOpen={isSuccessOpen}
           onClose={onSuccessClose}
           classNames={{
             header: "dark:text-gray-200",
@@ -338,7 +368,10 @@ export default function Dashboard() {
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
                   <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
-                    <Trophy size={40} className="text-green-600 dark:text-green-400" />
+                    <Trophy
+                      size={40}
+                      className="text-green-600 dark:text-green-400"
+                    />
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
@@ -349,7 +382,8 @@ export default function Dashboard() {
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Seçilen Saat: <span className="font-semibold">{selectedTime}</span>
+                    Seçilen Saat:{" "}
+                    <span className="font-semibold">{selectedTime}</span>
                   </p>
                 </div>
               </div>
@@ -369,4 +403,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-} 
+}
