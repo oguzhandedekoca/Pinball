@@ -1,7 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { database } from "../firebase/config";
-import { collection, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import {
   Input,
@@ -11,7 +9,6 @@ import {
   CardHeader,
   Select,
   SelectItem,
-  Tooltip,
 } from "@nextui-org/react";
 import {
   Trophy,
@@ -27,10 +24,7 @@ import {
 import { useUser } from "../providers";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 
 export default function Login() {
@@ -68,7 +62,7 @@ export default function Login() {
     );
   };
 
-  const getErrorMessage = (errorCode: string, message: string) => {
+  const getErrorMessage = (errorCode: string) => {
     switch (errorCode) {
       case "auth/user-not-found":
         return "Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı";
@@ -82,7 +76,7 @@ export default function Login() {
       case "INVALID_LOGIN_CREDENTIALS":
         return "E-posta veya şifre hatalı";
       default:
-        return message || "Bir hata oluştu";
+        return "Bir hata oluştu";
     }
   };
 
@@ -98,24 +92,29 @@ export default function Login() {
             email,
             password
           );
-        } catch (error: any) {
-          const errorMessage = getErrorMessage(error.code, error.message);
-          showToast(errorMessage);
-          console.error("Login error:", error);
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            const errorMessage = getErrorMessage(error.message);
+            showToast(errorMessage);
+            console.error("Login error:", error);
+          } else {
+            showToast("Beklenmeyen bir hata oluştu");
+            console.error("Unknown login error:", error);
+          }
           setIsLoading(false);
           return;
         }
 
         // Firestore'a kullanıcı bilgilerini kaydet
-        const userDoc = await addDoc(collection(database, "users"), {
-          uid: userCredential.user.uid,
-          username: username,
-          position: position,
-          email: email,
-          loginTime: new Date().toISOString(),
-        });
+        // const userDoc = await addDoc(collection(database, "users"), {
+        //   uid: userCredential.user.uid,
+        //   username: username,
+        //   position: position,
+        //   email: email,
+        //   loginTime: new Date().toISOString(),
+        // });
 
-        setCurrentUser(username);
+        setCurrentUser(userCredential.user);
         router.push(`/dashboard?player1=${username}&position=${position}`);
       } catch (error) {
         console.error("Giriş hatası:", error);
