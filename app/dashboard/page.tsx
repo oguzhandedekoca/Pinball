@@ -64,6 +64,11 @@ export default function Dashboard() {
     onOpen: onSuccessOpen,
     onClose: onSuccessClose,
   } = useDisclosure();
+  const {
+    isOpen: isMissingPlayersOpen,
+    onOpen: onMissingPlayersOpen,
+    onClose: onMissingPlayersClose,
+  } = useDisclosure();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
   const router = useRouter();
@@ -136,7 +141,7 @@ export default function Dashboard() {
     }
 
     if (!areAllPlayersEntered()) {
-      alert("Lütfen tüm oyuncuların isimlerini girin!");
+      onMissingPlayersOpen();
       return;
     }
 
@@ -396,6 +401,55 @@ export default function Dashboard() {
                 className="w-full"
               >
                 Tamam
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Eksik Oyuncular Modalı */}
+        <Modal
+          isOpen={isMissingPlayersOpen}
+          onClose={onMissingPlayersClose}
+          classNames={{
+            header: "dark:text-gray-200",
+            body: "dark:text-gray-300",
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="flex gap-2 items-center text-orange-600 dark:text-orange-400">
+              <Users size={24} />
+              🚦 Dur! 🚦
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="p-4 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+                    <div className="text-4xl">✋</div>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                  Daha takım arkadaşlarını seçmedin birader! 😤
+                </h3>
+                <div className="space-y-3">
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    Adamlarını topla gel! 🏃‍♂️💨
+                  </p>
+                  <div className="bg-orange-50 dark:bg-orange-800/30 p-3 rounded-lg">
+                    <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                      💪 Yukarıdaki formdan takımını kur, sonra maç yapalım!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="primary"
+                variant="light"
+                onPress={onMissingPlayersClose}
+                className="w-full bg-orange-500 text-white"
+              >
+                Tamam birader, hemen topluyorum! 🚀
               </Button>
             </ModalFooter>
           </ModalContent>
