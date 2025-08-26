@@ -1,31 +1,57 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { database } from '../firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
-import { Input, Button, Card, CardBody, CardHeader, Select, SelectItem, Tooltip } from "@nextui-org/react";
-import { Trophy, Users, Table2, Timer, Gamepad2, Mail, Lock, XCircle, CheckCircle } from 'lucide-react';
-import { useUser } from '../providers';
-import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase/config';
+"use client";
+import { useState, useEffect } from "react";
+import { database } from "../firebase/config";
+import { collection, addDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import {
+  Input,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Select,
+  SelectItem,
+  Tooltip,
+} from "@nextui-org/react";
+import {
+  Trophy,
+  Users,
+  Table2,
+  Timer,
+  Gamepad2,
+  Mail,
+  Lock,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
+import { useUser } from "../providers";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "../firebase/config";
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [position, setPosition] = useState('kaleci');
+  const [username, setUsername] = useState("");
+  const [position, setPosition] = useState("kaleci");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setCurrentUser } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "error",
+  });
 
   const positions = [
     { label: "Kaleci 🧤", value: "kaleci" },
-    { label: "Forvet 🎯", value: "forvet" }
+    { label: "Forvet 🎯", value: "forvet" },
   ];
 
   useEffect(() => {
@@ -34,26 +60,29 @@ export default function Login() {
 
   if (!mounted) return null;
 
-  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+  const showToast = (message: string, type: "error" | "success" = "error") => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 3000);
+    setTimeout(
+      () => setToast({ show: false, message: "", type: "error" }),
+      3000
+    );
   };
 
   const getErrorMessage = (errorCode: string, message: string) => {
     switch (errorCode) {
-      case 'auth/user-not-found':
-        return 'Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı';
-      case 'auth/wrong-password':
-        return 'Hatalı şifre girdiniz';
-      case 'auth/email-already-in-use':
-        return 'Bu e-posta adresi zaten kullanımda';
-      case 'auth/weak-password':
-        return 'Şifre en az 6 karakter olmalıdır';
-      case 'auth/invalid-credential':
-      case 'INVALID_LOGIN_CREDENTIALS':
-        return 'E-posta veya şifre hatalı';
+      case "auth/user-not-found":
+        return "Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı";
+      case "auth/wrong-password":
+        return "Hatalı şifre girdiniz";
+      case "auth/email-already-in-use":
+        return "Bu e-posta adresi zaten kullanımda";
+      case "auth/weak-password":
+        return "Şifre en az 6 karakter olmalıdır";
+      case "auth/invalid-credential":
+      case "INVALID_LOGIN_CREDENTIALS":
+        return "E-posta veya şifre hatalı";
       default:
-        return message || 'Bir hata oluştu';
+        return message || "Bir hata oluştu";
     }
   };
 
@@ -64,29 +93,33 @@ export default function Login() {
       try {
         let userCredential;
         try {
-          userCredential = await signInWithEmailAndPassword(auth, email, password);
+          userCredential = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
         } catch (error: any) {
           const errorMessage = getErrorMessage(error.code, error.message);
           showToast(errorMessage);
-          console.error('Login error:', error);
+          console.error("Login error:", error);
           setIsLoading(false);
           return;
         }
 
         // Firestore'a kullanıcı bilgilerini kaydet
-        const userDoc = await addDoc(collection(database, 'users'), {
+        const userDoc = await addDoc(collection(database, "users"), {
           uid: userCredential.user.uid,
           username: username,
           position: position,
           email: email,
-          loginTime: new Date().toISOString()
+          loginTime: new Date().toISOString(),
         });
 
         setCurrentUser(username);
         router.push(`/dashboard?player1=${username}&position=${position}`);
       } catch (error) {
         console.error("Giriş hatası:", error);
-        showToast('Giriş yapılırken bir hata oluştu!');
+        showToast("Giriş yapılırken bir hata oluştu!");
       } finally {
         setIsLoading(false);
       }
@@ -99,7 +132,10 @@ export default function Login() {
       <div className="w-full bg-white dark:bg-gray-900 shadow-sm p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center">
-            <Table2 className="text-blue-600 dark:text-blue-400 mr-2" size={32} />
+            <Table2
+              className="text-blue-600 dark:text-blue-400 mr-2"
+              size={32}
+            />
             <h1 className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
               Langırt Randevu Sistemi
             </h1>
@@ -107,9 +143,9 @@ export default function Login() {
           <Button
             isIconOnly
             variant="light"
-            onPress={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onPress={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
-            {theme === 'dark' ? (
+            {theme === "dark" ? (
               <Sun className="text-yellow-400" size={24} />
             ) : (
               <Moon className="text-gray-600" size={24} />
@@ -124,7 +160,7 @@ export default function Login() {
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center md:text-left mb-6">
             Hoş Geldiniz! 👋
           </h2>
-          
+
           {/* Bilgi Kartları */}
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardBody className="flex items-center gap-4 p-4">
@@ -133,7 +169,9 @@ export default function Login() {
               </div>
               <div>
                 <p className="font-semibold">Arkadaşlarınla Rekabet Et</p>
-                <p className="text-sm opacity-80">2v2 maçlar ile eğlenceli vakit geçir</p>
+                <p className="text-sm opacity-80">
+                  2v2 maçlar ile eğlenceli vakit geçir
+                </p>
               </div>
             </CardBody>
           </Card>
@@ -145,7 +183,9 @@ export default function Login() {
               </div>
               <div>
                 <p className="font-semibold">Kolay Rezervasyon</p>
-                <p className="text-sm opacity-80">İstediğin saati seç ve hemen oynamaya başla</p>
+                <p className="text-sm opacity-80">
+                  İstediğin saati seç ve hemen oynamaya başla
+                </p>
               </div>
             </CardBody>
           </Card>
@@ -157,7 +197,9 @@ export default function Login() {
               </div>
               <div>
                 <p className="font-semibold">Takımını Oluştur</p>
-                <p className="text-sm opacity-80">Arkadaşlarınla takım ol ve maça başla</p>
+                <p className="text-sm opacity-80">
+                  Arkadaşlarınla takım ol ve maça başla
+                </p>
               </div>
             </CardBody>
           </Card>
@@ -168,7 +210,10 @@ export default function Login() {
           <Card className="border-2 border-blue-100 dark:border-gray-700">
             <CardHeader className="flex gap-3 justify-center pb-0">
               <div className="flex flex-col items-center">
-                <Gamepad2 size={40} className="text-blue-600 dark:text-blue-400 mb-2" />
+                <Gamepad2
+                  size={40}
+                  className="text-blue-600 dark:text-blue-400 mb-2"
+                />
                 <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   Oyuncu Girişi
                 </h1>
@@ -186,9 +231,7 @@ export default function Login() {
                   placeholder="Oyuncu adını gir"
                   variant="bordered"
                   labelPlacement="outside"
-                  startContent={
-                    <Users className="text-gray-400" size={18} />
-                  }
+                  startContent={<Users className="text-gray-400" size={18} />}
                   required
                 />
                 <Input
@@ -198,9 +241,7 @@ export default function Login() {
                   placeholder="E-posta adresiniz"
                   variant="bordered"
                   labelPlacement="outside"
-                  startContent={
-                    <Mail className="text-gray-400" size={18} />
-                  }
+                  startContent={<Mail className="text-gray-400" size={18} />}
                   required
                 />
                 <Input
@@ -210,9 +251,7 @@ export default function Login() {
                   placeholder="Şifreniz (en az 6 karakter)"
                   variant="bordered"
                   labelPlacement="outside"
-                  startContent={
-                    <Lock className="text-gray-400" size={18} />
-                  }
+                  startContent={<Lock className="text-gray-400" size={18} />}
                   required
                 />
                 <Select
@@ -224,7 +263,11 @@ export default function Login() {
                   className="w-full"
                 >
                   {positions.map((pos) => (
-                    <SelectItem key={pos.value} value={pos.value}>
+                    <SelectItem
+                      className="text-gray-600 dark:text-gray-400"
+                      key={pos.value}
+                      value={pos.value}
+                    >
                       {pos.label}
                     </SelectItem>
                   ))}
@@ -252,15 +295,21 @@ export default function Login() {
       </div>
 
       {/* Toast Notification */}
-      <div className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
-        toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-      }`}>
-        <Card className={`${
-          toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-        } text-white shadow-lg`}>
+      <div
+        className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
+          toast.show
+            ? "translate-x-0 opacity-100"
+            : "translate-x-full opacity-0"
+        }`}
+      >
+        <Card
+          className={`${
+            toast.type === "error" ? "bg-red-500" : "bg-green-500"
+          } text-white shadow-lg`}
+        >
           <CardBody className="py-3 px-4">
             <div className="flex items-center gap-2">
-              {toast.type === 'error' ? (
+              {toast.type === "error" ? (
                 <XCircle size={20} />
               ) : (
                 <CheckCircle size={20} />
@@ -272,4 +321,4 @@ export default function Login() {
       </div>
     </div>
   );
-} 
+}
