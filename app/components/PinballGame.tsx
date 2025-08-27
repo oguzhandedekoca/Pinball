@@ -8,6 +8,17 @@ interface GameState {
   player1Score: number;
   player2Score: number;
   winner: number | null;
+  ball?: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+  };
+  scores?: {
+    player1: number;
+    player2: number;
+  };
+  lastUpdated?: Date;
 }
 
 interface Ball {
@@ -90,12 +101,38 @@ export function PinballGame({
   const startGame = () => {
     console.log("🎮 Oyun başlatılıyor...");
     setGameState((prev) => ({ ...prev, isPlaying: true }));
+
+    // Multiplayer modda oyun durumunu güncelle
+    if (multiplayer && onGameStateUpdate) {
+      onGameStateUpdate({
+        isPlaying: true,
+        scores: {
+          player1: gameState.player1Score,
+          player2: gameState.player2Score,
+        },
+        ball: {
+          x: ball.current.x,
+          y: ball.current.y,
+          vx: ball.current.vx,
+          vy: ball.current.vy,
+        },
+        lastUpdated: new Date(),
+      });
+    }
   };
 
   // Oyunu durdur
   const pauseGame = () => {
     console.log("⏸️ Oyun duraklatılıyor...");
     setGameState((prev) => ({ ...prev, isPlaying: false }));
+
+    // Multiplayer modda oyun durumunu güncelle
+    if (multiplayer && onGameStateUpdate) {
+      onGameStateUpdate({
+        isPlaying: false,
+        lastUpdated: new Date(),
+      });
+    }
   };
 
   // Oyunu sıfırla
@@ -122,6 +159,23 @@ export function PinballGame({
 
     // Rod'ları oluştur
     createRods();
+
+    // Multiplayer modda oyun durumunu güncelle
+    if (multiplayer && onGameStateUpdate) {
+      onGameStateUpdate({
+        isPlaying: false,
+        player1Score: 0,
+        player2Score: 0,
+        winner: null,
+        ball: {
+          x: ball.current.x,
+          y: ball.current.y,
+          vx: ball.current.vx,
+          vy: ball.current.vy,
+        },
+        lastUpdated: new Date(),
+      });
+    }
   };
 
   // Rod'ları oluştur
@@ -467,6 +521,24 @@ export function PinballGame({
     ) {
       resetBall();
     }
+
+    // Multiplayer modda top pozisyonunu sürekli güncelle
+    if (multiplayer && onGameStateUpdate && gameState.isPlaying) {
+      onGameStateUpdate({
+        ball: {
+          x: ballObj.x,
+          y: ballObj.y,
+          vx: ballObj.vx,
+          vy: ballObj.vy,
+        },
+        scores: {
+          player1: gameState.player1Score,
+          player2: gameState.player2Score,
+        },
+        isPlaying: gameState.isPlaying,
+        lastUpdated: new Date(),
+      });
+    }
   };
 
   // Gol at
@@ -725,9 +797,11 @@ export function PinballGame({
 
   // Ana oyun döngüsü
   const gameLoop = () => {
-    updateGame();
-    renderGame();
-    animationRef.current = requestAnimationFrame(gameLoop);
+    if (gameState.isPlaying) {
+      updateGame();
+      renderGame();
+      animationRef.current = requestAnimationFrame(gameLoop);
+    }
   };
 
   // Component mount olduğunda oyunu hazırla
@@ -739,8 +813,12 @@ export function PinballGame({
   // Multiplayer oyun durumu senkronizasyonu
   useEffect(() => {
     if (multiplayer && externalGameState) {
+      console.log("🔄 Multiplayer senkronizasyon:", externalGameState);
+      console.log("📊 Mevcut local gameState:", gameState);
+
       // Dış oyun durumundan güncelle
       if (externalGameState.ball) {
+        console.log("⚽ Top pozisyonu güncelleniyor:", externalGameState.ball);
         ball.current = {
           x: externalGameState.ball.x,
           y: externalGameState.ball.y,
@@ -751,17 +829,88 @@ export function PinballGame({
       }
 
       if (externalGameState.scores) {
+        console.log("📈 Skor güncelleniyor:", externalGameState.scores);
         setGameState((prev) => ({
           ...prev,
-          player1Score: externalGameState.scores.player1,
-          player2Score: externalGameState.scores.player2,
+          player1Score: externalGameState?.scores?.player1 ?? 0,
+          player2Score: externalGameState?.scores?.player2 ?? 0,
         }));
+      }
+
+      // Oyun durumunu güncelle - BU ÇOK ÖNEMLİ!
+      if (externalGameState.isPlaying !== undefined) {
+        console.log(
+          "🎮 Oyun durumu güncelleniyor:",
+          externalGameState.isPlaying,
+          "Mevcut durum:",
+          gameState.isPlaying
+        );
+
+        // Her zaman güncelle (senkronizasyon için)
+        setGameState((prev) => ({
+          ...prev,
+          isPlaying: externalGameState.isPlaying,
+        }));
+
+        console.log("✅ Oyun durumu güncellendi:", externalGameState.isPlaying);
+
+        // Eğer oyun başlatılıyorsa, top pozisyonunu da sıfırla
+        if (externalGameState.isPlaying && externalGameState.ball) {
+          console.log("🎯 Oyun başladı, top pozisyonu sıfırlanıyor");
+          ball.current = {
+            x: externalGameState.ball.x,
+            y: externalGameState.ball.y,
+            vx: externalGameState.ball.vx,
+            vy: externalGameState.ball.vy,
+            radius: 6,
+          };
+        }
       }
     }
   }, [multiplayer, externalGameState]);
 
+  // Multiplayer modda sürekli oyun durumunu güncelle - SADECE KENDİ TAKIMINDA
+  useEffect(() => {
+    if (!multiplayer || !onGameStateUpdate) return;
+
+    const interval = setInterval(() => {
+      // Sadece kendi takımının oyun durumunu güncelle
+      if (gameState.isPlaying) {
+        onGameStateUpdate({
+          ball: {
+            x: ball.current.x,
+            y: ball.current.y,
+            vx: ball.current.vx,
+            vy: ball.current.vy,
+          },
+          scores: {
+            player1: gameState.player1Score,
+            player2: gameState.player2Score,
+          },
+          isPlaying: gameState.isPlaying,
+          lastUpdated: new Date(),
+        });
+      }
+    }, 100); // 100ms'de bir güncelle (10 FPS) - daha az sıklıkta
+
+    return () => clearInterval(interval);
+  }, [
+    multiplayer,
+    onGameStateUpdate,
+    gameState.player1Score,
+    gameState.player2Score,
+    gameState.isPlaying,
+  ]);
+
   // Oyun durumu değiştiğinde gameLoop'u başlat/durdur
   useEffect(() => {
+    console.log(
+      "🎮 Oyun durumu değişti:",
+      gameState.isPlaying,
+      "Multiplayer:",
+      multiplayer
+    );
+
     if (gameState.isPlaying) {
       console.log("🚀 Oyun başladı, gameLoop başlatılıyor...");
       gameLoop();
@@ -771,7 +920,7 @@ export function PinballGame({
         cancelAnimationFrame(animationRef.current);
       }
     }
-  }, [gameState.isPlaying]);
+  }, [gameState.isPlaying, multiplayer]);
 
   // Component unmount olduğunda temizlik
   useEffect(() => {
