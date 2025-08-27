@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function LoadingScreen() {
@@ -8,7 +8,7 @@ export function LoadingScreen() {
         initial={{ opacity: 1 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800"
+        className="min-h-screen flex flex-col bg-black items-center justify-center"
       >
         <div className="w-80 h-80 relative">
           <svg viewBox="0 0 200 120" className="w-full h-full">
@@ -44,7 +44,7 @@ export function LoadingScreen() {
                   repeat: Infinity,
                   delay: i * 0.2,
                   ease: "easeInOut",
-                  immediateRender: true
+                  immediateRender: true,
                 }}
                 style={{ originX: `${x}px`, originY: "60px" }}
               >
@@ -96,7 +96,7 @@ export function LoadingScreen() {
                 repeat: Infinity,
                 ease: "easeInOut",
                 immediateRender: true,
-                times: [0, 0.33, 0.66, 1]
+                times: [0, 0.33, 0.66, 1],
               }}
             />
 
@@ -123,7 +123,7 @@ export function LoadingScreen() {
             transition={{
               duration: 0.8,
               repeat: Infinity,
-              immediateRender: true
+              immediateRender: true,
             }}
           >
             Yükleniyor...
@@ -135,7 +135,7 @@ export function LoadingScreen() {
               transition={{
                 duration: 0.4,
                 repeat: Infinity,
-                immediateRender: true
+                immediateRender: true,
               }}
             />
             <motion.div
@@ -145,7 +145,7 @@ export function LoadingScreen() {
                 duration: 0.4,
                 repeat: Infinity,
                 delay: 0.1,
-                immediateRender: true
+                immediateRender: true,
               }}
             />
             <motion.div
@@ -155,7 +155,7 @@ export function LoadingScreen() {
                 duration: 0.4,
                 repeat: Infinity,
                 delay: 0.2,
-                immediateRender: true
+                immediateRender: true,
               }}
             />
           </div>
@@ -166,4 +166,4 @@ export function LoadingScreen() {
       </motion.div>
     </AnimatePresence>
   );
-} 
+}

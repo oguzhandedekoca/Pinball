@@ -38,6 +38,7 @@ import { PlayerForm } from "../components/PlayerForm";
 import { TimeSlotGrid } from "../components/TimeSlotGrid";
 import { PlayerData, TimeSlotData } from "../types";
 import { LoadingScreen } from "../components/LoadingScreen";
+import { PinballGame } from "../components/PinballGame";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -303,6 +304,11 @@ export default function Dashboard() {
           isTimeSlotSelectable={isTimeSlotSelectable}
           currentUserUid={currentUserUid}
         />
+
+        {/* Mini Langırt Oyunu */}
+        <div className="mt-8">
+          <PinballGame />
+        </div>
 
         {/* Onay Butonu */}
         {selectedBox !== null && areAllPlayersEntered() && (
