@@ -38,20 +38,22 @@ export interface GamePlayer {
 }
 
 export interface GameState {
-  ball: {
+  isPlaying: boolean;
+  player1Score: number;
+  player2Score: number;
+  winner: number | null;
+  ball?: {
     x: number;
     y: number;
     vx: number;
     vy: number;
   };
-  rods: RodState[];
-  scores: {
+  rods?: RodState[];
+  scores?: {
     player1: number;
     player2: number;
   };
-  isPlaying: boolean;
-  winner?: number;
-  lastUpdated: Date;
+  lastUpdated?: Date;
 }
 
 export interface RodState {

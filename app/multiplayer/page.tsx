@@ -17,32 +17,23 @@ import {
   Play,
   Users2,
   Clock,
-  Trophy,
 } from "lucide-react";
 import { useUser } from "../providers";
-import { auth, database, realtimeDatabase } from "../firebase/config";
+import { database } from "../firebase/config";
 import {
   collection,
   addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
   onSnapshot,
   doc,
-  updateDoc,
   setDoc,
-  serverTimestamp,
 } from "firebase/firestore";
-import { ref, set, onValue, push, onDisconnect } from "firebase/database";
-import { GameRoom, GamePlayer, GameState } from "../types";
+import { GameRoom } from "../types";
 
 export default function MultiplayerPage() {
   const router = useRouter();
   const { currentUser } = useUser();
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creatingRoom, setCreatingRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -102,34 +93,39 @@ export default function MultiplayerPage() {
     }
   };
 
-    const joinRoom = async (room: GameRoom) => {
+  const joinRoom = async (room: GameRoom) => {
     if (!currentUser || room.players.player2) return;
 
     try {
       const roomRef = doc(database, "gameRooms", room.id);
-      
+
       // setDoc ile merge seçeneği kullanarak güncelle
-      await setDoc(roomRef, {
-        players: {
-          ...room.players,
-          player2: {
-            id: currentUser.uid,
-            username: currentUser.displayName || currentUser.email || "Oyuncu",
-            team: 2,
-            isReady: true,
-            lastSeen: new Date(),
-          }
+      await setDoc(
+        roomRef,
+        {
+          players: {
+            ...room.players,
+            player2: {
+              id: currentUser.uid,
+              username:
+                currentUser.displayName || currentUser.email || "Oyuncu",
+              team: 2,
+              isReady: true,
+              lastSeen: new Date(),
+            },
+          },
+          status: "playing",
         },
-        status: "playing",
-      }, { merge: true });
+        { merge: true }
+      );
 
       console.log("✅ Odaya başarıyla katıldınız!");
-      
+
       // Odaya katıl
       router.push(`/multiplayer/game/${room.id}`);
     } catch (error) {
       console.error("Odaya katılma hatası:", error);
-      
+
       // Kullanıcıya hata mesajı göster
       alert("Odaya katılırken bir hata oluştu. Lütfen tekrar deneyin.");
     }
@@ -168,7 +164,7 @@ export default function MultiplayerPage() {
             onPress={() => router.push("/dashboard")}
             startContent={<Users2 size={20} />}
           >
-            Dashboard'a Dön
+            Dashboard&apos;a Dön
           </Button>
         </div>
       </div>
@@ -197,7 +193,7 @@ export default function MultiplayerPage() {
               <Button
                 color="primary"
                 onPress={createRoom}
-                isLoading={creatingRoom}
+                isLoading={false} // Removed creatingRoom state
                 startContent={<Plus size={20} />}
               >
                 Oda Oluştur

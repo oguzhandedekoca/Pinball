@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Card, CardBody, CardHeader, Chip } from "@nextui-org/react";
-import { Users, Gamepad2, ArrowLeft, Trophy, Users2, Play } from "lucide-react";
+import { Button, Card, CardBody, Chip } from "@nextui-org/react";
+import { Users, Gamepad2, ArrowLeft, Users2, Play } from "lucide-react";
 import { useUser } from "../../../providers";
-import { auth, database, realtimeDatabase } from "../../../firebase/config";
+import { database, realtimeDatabase } from "../../../firebase/config";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import {
   ref,
@@ -28,7 +28,7 @@ export default function MultiplayerGamePage() {
   const [myTeam, setMyTeam] = useState<1 | 2 | null>(null);
   const [opponent, setOpponent] = useState<GamePlayer | null>(null);
 
-  const gameStateRef = useRef<GameState | null>(null);
+  const localGameStateRef = useRef<GameState | null>(null);
   const lastUpdateRef = useRef<number>(0);
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function MultiplayerGamePage() {
 
         // Her zaman güncelle (senkronizasyon için)
         setGameState(data);
-        gameStateRef.current = data;
+        localGameStateRef.current = data;
 
         console.log("🔄 Oyun durumu güncellendi:", data);
 
@@ -211,8 +211,8 @@ export default function MultiplayerGamePage() {
       console.log("✅ Realtime Database'e yazıldı:", gameRef.toString());
 
       // Local state'i güncelle
-      setGameState(updatedGameState);
-      gameStateRef.current = updatedGameState;
+      setGameState(updatedGameState as GameState);
+      localGameStateRef.current = updatedGameState as GameState;
 
       console.log("🔄 Oyun durumu güncellendi:", newGameState);
     } catch (error) {
@@ -268,8 +268,9 @@ export default function MultiplayerGamePage() {
                   <span className="flex items-center gap-1">
                     <Users size={16} />
                     {
-                      Object.keys(room.players).filter((p) => room.players[p])
-                        .length
+                      Object.keys(room.players).filter(
+                        (p) => room.players[p as keyof typeof room.players]
+                      ).length
                     }
                     /2
                   </span>
@@ -353,8 +354,11 @@ export default function MultiplayerGamePage() {
                           });
 
                           // Tamamen yeni bir oyun durumu oluştur
-                          const newGameState = {
+                          const newGameState: GameState = {
                             isPlaying: true,
+                            player1Score: 0,
+                            player2Score: 0,
+                            winner: null,
                             scores: {
                               player1: 0,
                               player2: 0,
@@ -377,7 +381,7 @@ export default function MultiplayerGamePage() {
 
                           // Sonra local state'i güncelle
                           setGameState(newGameState);
-                          gameStateRef.current = newGameState;
+                          localGameStateRef.current = newGameState;
 
                           console.log("✅ Oyun başarıyla başlatıldı!");
 
