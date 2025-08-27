@@ -182,7 +182,7 @@ export function PinballGame() {
       },
       // 8. Kırmızı Kaleci (1 oyuncu)
       {
-        x: TABLE_X + 750,
+        x: TABLE_X + 700,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
@@ -405,20 +405,22 @@ export function PinballGame() {
       });
     });
 
-    // Gol kontrolü - yeni rod pozisyonlarına göre ayarlandı
+    // Gol kontrolü - top gol alanına girdiğinde hemen gol
     if (
-      ballObj.x <= TABLE_X + 80 && // Sol kaleci pozisyonuna göre
+      ballObj.x <= TABLE_X + 20 && // Sol gol alanı - top gol alanına girdiğinde
       ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
       ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
     ) {
+      console.log("⚽ SOL GOL! Mavi takım gol attı!");
       scoreGoal(2);
     }
 
     if (
-      ballObj.x >= TABLE_X + TABLE_WIDTH - 80 && // Sağ kaleci pozisyonuna göre
+      ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - top gol alanına girdiğinde
       ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
       ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
     ) {
+      console.log("⚽ SAĞ GOL! Kırmızı takım gol attı!");
       scoreGoal(1);
     }
 
@@ -524,13 +526,15 @@ export function PinballGame() {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Goller
+    // Goller - doğru pozisyonlarda
     ctx.fillStyle = "#FF0000";
-    ctx.fillRect(TABLE_X - 20, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 20, 120);
+    // Sol gol - mavi kaleci çubuğunun arkasında, masanın dışında
+    ctx.fillRect(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 40, 120);
+    // Sağ gol - kırmızı kaleci çubuğunun arkasında, masanın dışında (daha geride)
     ctx.fillRect(
-      TABLE_X + TABLE_WIDTH,
+      TABLE_X + TABLE_WIDTH + 20,
       TABLE_Y + (TABLE_HEIGHT - 120) / 2,
-      20,
+      40,
       120
     );
 
