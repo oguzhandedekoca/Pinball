@@ -302,10 +302,13 @@ export function PinballGame({
     const handleKeyDown = (e: KeyboardEvent) => {
       keys.current[e.key] = true;
 
-      // Rod seçimi
-      if (e.key >= "1" && e.key <= "8") {
-        selectedRod.current = parseInt(e.key) - 1;
-        console.log(`🎯 Rod ${selectedRod.current + 1} seçildi`);
+      // Rod seçimi - Sağ/Sol ok tuşları ile
+      if (e.key === "ArrowLeft") {
+        selectedRod.current = Math.max(0, selectedRod.current - 1);
+        console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sol)`);
+      } else if (e.key === "ArrowRight") {
+        selectedRod.current = Math.min(7, selectedRod.current + 1);
+        console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sağ)`);
       }
     };
 
@@ -730,7 +733,7 @@ export function PinballGame({
     ctx.font = "14px Arial";
     ctx.textAlign = "left";
     ctx.fillText("Kontroller:", 20, CANVAS_HEIGHT - 120);
-    ctx.fillText("1-8: Rod seç", 20, CANVAS_HEIGHT - 100);
+    ctx.fillText("←/→: Rod seç (Sol/Sağ)", 20, CANVAS_HEIGHT - 100);
     ctx.fillText("W/S: Yukarı/Aşağı", 20, CANVAS_HEIGHT - 80);
     ctx.fillText("Space: Vuruş", 20, CANVAS_HEIGHT - 60);
 
@@ -1003,8 +1006,7 @@ export function PinballGame({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
             <div>
               <p>
-                <strong>1-8:</strong> Rod seç (1-4: Mavi takım, 5-8: Kırmızı
-                takım)
+                <strong>←/→:</strong> Rod seç (Sol/Sağ ok tuşları ile)
               </p>
               <p>
                 <strong>W / Yukarı Ok:</strong> Seçili rod&apos;u yukarı hareket
