@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { NextUIProvider } from '@nextui-org/react';
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
-import { auth } from './firebase/config';
-import { User } from 'firebase/auth';
-import { LoadingScreen } from './components/LoadingScreen';
+import { NextUIProvider } from "@nextui-org/react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { auth } from "./firebase/config";
+import { User } from "firebase/auth";
+import { LoadingScreen } from "./components/LoadingScreen";
 
 interface UserContextType {
   currentUser: User | null;
@@ -32,23 +32,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
     try {
       await auth.signOut();
       setCurrentUser(null);
-      router.push('/login');
+      router.push("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
-      
+
       // Minimum 1 saniyelik loading süresi
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
-      
-      if (!user && !pathname.includes('/login')) {
-        router.push('/login');
+
+      if (!user && !pathname.includes("/login")) {
+        router.push("/login");
       }
     });
 
@@ -60,12 +60,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="light">
+    <NextThemesProvider attribute="class" defaultTheme="dark">
       <UserContext.Provider value={{ currentUser, logout, setCurrentUser }}>
-        <NextUIProvider>
-          {children}
-        </NextUIProvider>
+        <NextUIProvider>{children}</NextUIProvider>
       </UserContext.Provider>
     </NextThemesProvider>
   );
-} 
+}
