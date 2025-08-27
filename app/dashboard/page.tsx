@@ -29,6 +29,7 @@ import {
   Trash2,
   Trophy,
   CheckCircle2,
+  Gamepad2,
 } from "lucide-react";
 import { useUser } from "../providers";
 import { useTheme } from "next-themes";
@@ -252,6 +253,15 @@ export default function Dashboard() {
                 Hoş geldin, {player1} ({position === "kaleci" ? "🧤" : "🎯"})
               </span>
             </div>
+            <Button
+              color="primary"
+              variant="flat"
+              onPress={() => router.push("/multiplayer")}
+              startContent={<Gamepad2 size={20} />}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white"
+            >
+              Multiplayer Oyna
+            </Button>
             <Button
               isIconOnly
               variant="light"

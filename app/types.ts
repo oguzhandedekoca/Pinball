@@ -14,3 +14,53 @@ export interface TimeSlotData {
   selectedTime: string;
   selectedBox: number;
 }
+
+// Multiplayer Langırt Oyun Tipleri
+export interface GameRoom {
+  id: string;
+  name: string;
+  status: "waiting" | "playing" | "finished";
+  players: {
+    player1?: GamePlayer;
+    player2?: GamePlayer;
+  };
+  maxPlayers: 2;
+  createdAt: Date;
+  gameState?: GameState;
+}
+
+export interface GamePlayer {
+  id: string;
+  username: string;
+  team: 1 | 2; // 1: Mavi, 2: Kırmızı
+  isReady: boolean;
+  lastSeen: Date;
+}
+
+export interface GameState {
+  ball: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+  };
+  rods: RodState[];
+  scores: {
+    player1: number;
+    player2: number;
+  };
+  isPlaying: boolean;
+  winner?: number;
+  lastUpdated: Date;
+}
+
+export interface RodState {
+  rodIndex: number;
+  players: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    team: 1 | 2;
+  }[];
+}

@@ -34,9 +34,22 @@ interface Rod {
   height: number;
   team: 1 | 2;
   players: Player[];
+  rodIndex: number;
 }
 
-export function PinballGame() {
+interface PinballGameProps {
+  multiplayer?: boolean;
+  myTeam?: 1 | 2;
+  onGameStateUpdate?: (gameState: Partial<GameState>) => void;
+  gameState?: GameState | null;
+}
+
+export function PinballGame({
+  multiplayer = false,
+  myTeam,
+  onGameStateUpdate,
+  gameState: externalGameState,
+}: PinballGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const [gameState, setGameState] = useState<GameState>({
@@ -259,6 +272,27 @@ export function PinballGame() {
   const updateGame = () => {
     if (!gameState.isPlaying) return;
 
+    // Multiplayer modda sadece kendi takımını kontrol et
+    if (multiplayer && myTeam) {
+      // Sadece kendi takımının rod'larını kontrol et
+      const myRods = rods.current.filter((rod) => rod.team === myTeam);
+
+      // Seçili rod sadece kendi takımından olmalı
+      if (
+        selectedRod.current >= 0 &&
+        selectedRod.current < rods.current.length
+      ) {
+        const selectedRodObj = rods.current[selectedRod.current];
+        if (selectedRodObj.team !== myTeam) {
+          // Başka takımın rod'unu seçmeye çalışıyorsa, kendi takımından birini seç
+          const firstMyRod = myRods[0];
+          if (firstMyRod) {
+            selectedRod.current = firstMyRod.rodIndex;
+          }
+        }
+      }
+    }
+
     const ballObj = ball.current;
     const rodsArray = rods.current;
 
@@ -449,6 +483,22 @@ export function PinballGame() {
         ...prev,
         player2Score: prev.player2Score + 1,
       }));
+    }
+
+    // Multiplayer modda oyun durumunu güncelle
+    if (multiplayer && onGameStateUpdate) {
+      onGameStateUpdate({
+        scores: {
+          player1:
+            scoringTeam === 1
+              ? gameState.player1Score + 1
+              : gameState.player1Score,
+          player2:
+            scoringTeam === 2
+              ? gameState.player2Score + 1
+              : gameState.player2Score,
+        },
+      });
     }
 
     resetBall();
@@ -685,6 +735,30 @@ export function PinballGame() {
     resetGame();
     console.log("🎮 Component mount oldu, oyun hazırlanıyor...");
   }, []);
+
+  // Multiplayer oyun durumu senkronizasyonu
+  useEffect(() => {
+    if (multiplayer && externalGameState) {
+      // Dış oyun durumundan güncelle
+      if (externalGameState.ball) {
+        ball.current = {
+          x: externalGameState.ball.x,
+          y: externalGameState.ball.y,
+          vx: externalGameState.ball.vx,
+          vy: externalGameState.ball.vy,
+          radius: 6,
+        };
+      }
+
+      if (externalGameState.scores) {
+        setGameState((prev) => ({
+          ...prev,
+          player1Score: externalGameState.scores.player1,
+          player2Score: externalGameState.scores.player2,
+        }));
+      }
+    }
+  }, [multiplayer, externalGameState]);
 
   // Oyun durumu değiştiğinde gameLoop'u başlat/durdur
   useEffect(() => {

@@ -15,5 +15,13 @@ service cloud.firestore {
       // Yeni rezervasyon oluşturabilir
       allow create: if request.auth != null;
     }
+    
+    // GameRooms koleksiyonu için kurallar
+    match /gameRooms/{roomId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && resource.data.players.player1.id == request.auth.uid;
+    }
   }
 } 
