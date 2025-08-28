@@ -149,14 +149,9 @@ export function PinballGame({
     });
 
     // Topu başlangıç pozisyonuna getir - rastgele sağa/sola
-    const randomSide = Math.random() > 0.5 ? 1 : -1; // 1: sağ, -1: sol
-    const randomX = CANVAS_WIDTH / 2 + randomSide * (Math.random() * 100 + 50); // Ortadan 50-150 piksel uzakta
-
+    const ballResetData = resetBallAndGetData();
     ball.current = {
-      x: randomX,
-      y: TABLE_Y + TABLE_HEIGHT / 2,
-      vx: randomSide * (Math.random() * 2 + 1), // Rastgele hız ve yön
-      vy: (Math.random() - 0.5) * 2, // Dikey rastgele hareket
+      ...ballResetData,
       radius: 6,
     };
 
@@ -170,12 +165,11 @@ export function PinballGame({
         player1Score: 0,
         player2Score: 0,
         winner: null,
-        ball: {
-          x: ball.current.x,
-          y: ball.current.y,
-          vx: ball.current.vx,
-          vy: ball.current.vy,
+        scores: {
+          player1: 0,
+          player2: 0,
         },
+        ball: ballResetData,
         lastUpdated: new Date(),
       });
     }
@@ -423,8 +417,11 @@ export function PinballGame({
         }
       }
 
-      // Vuruş
-      if (keys.current[" "]) {
+      // Vuruş - multiplayer modda sadece kendi rod'unu kontrol et
+      if (
+        keys.current[" "] &&
+        (!multiplayer || selectedRodObj.team === myTeam)
+      ) {
         selectedRodObj.players.forEach((player) => {
           const dx = ballObj.x - (player.x + player.width / 2);
           const dy = ballObj.y - (player.y + player.height / 2);
@@ -449,7 +446,11 @@ export function PinballGame({
               "⚽ Topa vuruldu! Takım:",
               selectedRodObj.team,
               "Güç:",
-              power
+              power,
+              "Multiplayer:",
+              multiplayer,
+              "MyTeam:",
+              myTeam
             );
           }
         });
@@ -600,51 +601,64 @@ export function PinballGame({
   const scoreGoal = (scoringTeam: number) => {
     console.log(`⚽ GOAL! Takım ${scoringTeam} gol attı!`);
 
-    if (scoringTeam === 1) {
-      setGameState((prev) => ({
-        ...prev,
-        player1Score: prev.player1Score + 1,
-      }));
-    } else {
-      setGameState((prev) => ({
-        ...prev,
-        player2Score: prev.player2Score + 1,
-      }));
-    }
+    const newPlayer1Score =
+      scoringTeam === 1 ? gameState.player1Score + 1 : gameState.player1Score;
+    const newPlayer2Score =
+      scoringTeam === 2 ? gameState.player2Score + 1 : gameState.player2Score;
 
-    // Multiplayer modda oyun durumunu güncelle
+    // State'i güncelle
+    setGameState((prev) => ({
+      ...prev,
+      player1Score: newPlayer1Score,
+      player2Score: newPlayer2Score,
+    }));
+
+    // Topu sıfırla
+    const resetBallData = resetBallAndGetData();
+
+    // Multiplayer modda oyun durumunu güncelle (top pozisyonu dahil)
     if (multiplayer && onGameStateUpdate) {
       onGameStateUpdate({
+        player1Score: newPlayer1Score,
+        player2Score: newPlayer2Score,
         scores: {
-          player1:
-            scoringTeam === 1
-              ? gameState.player1Score + 1
-              : gameState.player1Score,
-          player2:
-            scoringTeam === 2
-              ? gameState.player2Score + 1
-              : gameState.player2Score,
+          player1: newPlayer1Score,
+          player2: newPlayer2Score,
         },
+        ball: resetBallData,
+        lastUpdated: new Date(),
       });
     }
 
-    resetBall();
-
     // Oyun bitti mi kontrol et
-    if (gameState.player1Score >= 4 || gameState.player2Score >= 4) {
+    if (newPlayer1Score >= 4 || newPlayer2Score >= 4) {
       endGame();
     }
   };
 
-  // Topu sıfırla - rastgele sağa/sola
-  const resetBall = () => {
+  // Topu sıfırla ve veri döndür - multiplayer için
+  const resetBallAndGetData = () => {
     const randomSide = Math.random() > 0.5 ? 1 : -1; // 1: sağ, -1: sol
     const randomX = CANVAS_WIDTH / 2 + randomSide * (Math.random() * 100 + 50); // Ortadan 50-150 piksel uzakta
+    const vx = randomSide * (Math.random() * 2 + 1); // Rastgele hız ve yön
+    const vy = (Math.random() - 0.5) * 2; // Dikey rastgele hareket
 
     ball.current.x = randomX;
     ball.current.y = TABLE_Y + TABLE_HEIGHT / 2;
-    ball.current.vx = randomSide * (Math.random() * 2 + 1); // Rastgele hız ve yön
-    ball.current.vy = (Math.random() - 0.5) * 2; // Dikey rastgele hareket
+    ball.current.vx = vx;
+    ball.current.vy = vy;
+
+    return {
+      x: randomX,
+      y: TABLE_Y + TABLE_HEIGHT / 2,
+      vx: vx,
+      vy: vy,
+    };
+  };
+
+  // Topu sıfırla - rastgele sağa/sola (eski fonksiyon)
+  const resetBall = () => {
+    resetBallAndGetData();
   };
 
   // Topu kurtar (sıkıştıysa)
@@ -888,9 +902,12 @@ export function PinballGame({
         myTeam,
       });
 
-      // Dış oyun durumundan güncelle
-      if (externalGameState.ball) {
-        console.log("⚽ Top pozisyonu güncelleniyor:", externalGameState.ball);
+      // Dış oyun durumundan güncelle - SADECE CLIENT (2. oyuncu) top pozisyonunu alır
+      if (externalGameState.ball && (!multiplayer || myTeam === 2)) {
+        console.log(
+          "⚽ Top pozisyonu güncelleniyor (Client):",
+          externalGameState.ball
+        );
         ball.current = {
           x: externalGameState.ball.x,
           y: externalGameState.ball.y,
@@ -937,9 +954,13 @@ export function PinballGame({
             externalGameState.isPlaying
           );
 
-          // Eğer oyun başlatılıyorsa, top pozisyonunu da sıfırla
-          if (externalGameState.isPlaying && externalGameState.ball) {
-            console.log("🎯 Oyun başladı, top pozisyonu sıfırlanıyor");
+          // Eğer oyun başlatılıyorsa ve client ise, top pozisyonunu da sıfırla
+          if (
+            externalGameState.isPlaying &&
+            externalGameState.ball &&
+            myTeam === 2
+          ) {
+            console.log("🎯 Oyun başladı, top pozisyonu sıfırlanıyor (Client)");
             ball.current = {
               x: externalGameState.ball.x,
               y: externalGameState.ball.y,
@@ -997,7 +1018,7 @@ export function PinballGame({
         winner: gameState.winner,
         lastUpdated: new Date(),
       });
-    }, 50); // 50ms'de bir güncelle (20 FPS) - daha hızlı senkronizasyon
+    }, 30); // 30ms'de bir güncelle (33 FPS) - daha smooth senkronizasyon
 
     return () => clearInterval(interval);
   }, [
