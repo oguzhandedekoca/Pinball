@@ -300,13 +300,28 @@ export function PinballGame({
   // Klavye olaylarını dinle
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Sayfa kaydırmasını engelle
+      if (
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === " " ||
+        e.key === "a" ||
+        e.key === "d" ||
+        e.key === "w" ||
+        e.key === "s"
+      ) {
+        e.preventDefault();
+      }
+
       keys.current[e.key] = true;
 
-      // Rod seçimi - Sağ/Sol ok tuşları ile
-      if (e.key === "ArrowLeft") {
+      // Rod seçimi - Sağ/Sol ok tuşları veya A/D tuşları ile
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
         selectedRod.current = Math.max(0, selectedRod.current - 1);
         console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sol)`);
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
         selectedRod.current = Math.min(7, selectedRod.current + 1);
         console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sağ)`);
       }
@@ -733,7 +748,7 @@ export function PinballGame({
     ctx.font = "14px Arial";
     ctx.textAlign = "left";
     ctx.fillText("Kontroller:", 20, CANVAS_HEIGHT - 120);
-    ctx.fillText("←/→: Rod seç (Sol/Sağ)", 20, CANVAS_HEIGHT - 100);
+    ctx.fillText("←/→ veya A/D: Rod seç (Sol/Sağ)", 20, CANVAS_HEIGHT - 100);
     ctx.fillText("W/S: Yukarı/Aşağı", 20, CANVAS_HEIGHT - 80);
     ctx.fillText("Space: Vuruş", 20, CANVAS_HEIGHT - 60);
 
@@ -1006,7 +1021,8 @@ export function PinballGame({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
             <div>
               <p>
-                <strong>←/→:</strong> Rod seç (Sol/Sağ ok tuşları ile)
+                <strong>←/→ veya A/D:</strong> Rod seç (Sol/Sağ ok tuşları veya
+                A/D tuşları ile)
               </p>
               <p>
                 <strong>W / Yukarı Ok:</strong> Seçili rod&apos;u yukarı hareket
