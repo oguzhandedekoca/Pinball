@@ -79,6 +79,15 @@ export function PinballGame({
     radius: 6,
   });
 
+  // 2. oyuncu için smooth interpolation
+  const targetBall = useRef<Ball>({
+    x: 400,
+    y: 300,
+    vx: 0,
+    vy: 0,
+    radius: 6,
+  });
+
   const rods = useRef<Rod[]>([]);
   const keys = useRef<{ [key: string]: boolean }>({});
   const selectedRod = useRef<number>(0);
@@ -151,6 +160,12 @@ export function PinballGame({
     // Topu başlangıç pozisyonuna getir - rastgele sağa/sola
     const ballResetData = resetBallAndGetData();
     ball.current = {
+      ...ballResetData,
+      radius: 6,
+    };
+
+    // Target ball'u da aynı pozisyona ayarla
+    targetBall.current = {
       ...ballResetData,
       radius: 6,
     };
@@ -457,8 +472,9 @@ export function PinballGame({
       }
     }
 
-    // Top fiziği - SADECE HOST (1. oyuncu) hesaplar
+    // Top fiziği - HOST ve CLIENT farklı işlemler yapar
     if (isHost) {
+      // HOST: Normal fizik hesaplaması
       ballObj.x += ballObj.vx;
       ballObj.y += ballObj.vy;
       ballObj.vy += GRAVITY;
@@ -474,6 +490,39 @@ export function PinballGame({
       if (Math.abs(ballObj.vy) < MIN_BALL_SPEED && Math.abs(ballObj.vy) > 0.1) {
         ballObj.vy = ballObj.vy > 0 ? MIN_BALL_SPEED : -MIN_BALL_SPEED;
       }
+    } else if (multiplayer && myTeam === 2) {
+      // CLIENT: Responsive interpolation ile hedef pozisyona yaklaş
+      const distance = Math.sqrt(
+        Math.pow(targetBall.current.x - ballObj.x, 2) +
+          Math.pow(targetBall.current.y - ballObj.y, 2)
+      );
+
+      // Mesafeye göre adaptif interpolation - uzaksa hızlı, yakınsa yumuşak
+      let lerpFactor;
+      if (distance > 100) {
+        // Çok büyük farklılıklar (reset, çarpışma) - anlık snap
+        lerpFactor = 1.0;
+      } else if (distance > 30) {
+        lerpFactor = 0.7; // Uzaksa hızlı yakalama
+      } else if (distance > 10) {
+        lerpFactor = 0.4; // Orta mesafede responsive
+      } else {
+        lerpFactor = 0.2; // Yakınsa smooth
+      }
+
+      // Pozisyon güncelleme
+      ballObj.x += (targetBall.current.x - ballObj.x) * lerpFactor;
+      ballObj.y += (targetBall.current.y - ballObj.y) * lerpFactor;
+
+      // Hız değişiklikleri için daha agresif güncelleme (vuruş, çarpışma için)
+      const velocityDiff = Math.sqrt(
+        Math.pow(targetBall.current.vx - ballObj.vx, 2) +
+          Math.pow(targetBall.current.vy - ballObj.vy, 2)
+      );
+
+      const velocityLerpFactor = velocityDiff > 5 ? 0.8 : lerpFactor;
+      ballObj.vx += (targetBall.current.vx - ballObj.vx) * velocityLerpFactor;
+      ballObj.vy += (targetBall.current.vy - ballObj.vy) * velocityLerpFactor;
     }
 
     // Masa sınırları - SADECE HOST hesaplar
@@ -905,12 +954,19 @@ export function PinballGame({
       // Dış oyun durumundan güncelle - SADECE CLIENT (2. oyuncu) top pozisyonunu alır
       if (externalGameState.ball && (!multiplayer || myTeam === 2)) {
         console.log(
-          "⚽ Top pozisyonu güncelleniyor (Client):",
+          "⚽ Top hedef pozisyonu güncelleniyor (Client):",
           externalGameState.ball
         );
-        ball.current = {
-          x: externalGameState.ball.x,
-          y: externalGameState.ball.y,
+        // Smooth interpolation için hedef pozisyonu ayarla + predictive tracking
+        const networkDelay = 0.05; // Tahmini 50ms network gecikmesi
+        const predictedX =
+          externalGameState.ball.x + externalGameState.ball.vx * networkDelay;
+        const predictedY =
+          externalGameState.ball.y + externalGameState.ball.vy * networkDelay;
+
+        targetBall.current = {
+          x: predictedX,
+          y: predictedY,
           vx: externalGameState.ball.vx,
           vy: externalGameState.ball.vy,
           radius: 6,
@@ -961,13 +1017,17 @@ export function PinballGame({
             myTeam === 2
           ) {
             console.log("🎯 Oyun başladı, top pozisyonu sıfırlanıyor (Client)");
-            ball.current = {
+            const ballData = {
               x: externalGameState.ball.x,
               y: externalGameState.ball.y,
               vx: externalGameState.ball.vx,
               vy: externalGameState.ball.vy,
               radius: 6,
             };
+
+            // Hem current hem de target'ı aynı pozisyona ayarla (anlık reset için)
+            ball.current = ballData;
+            targetBall.current = ballData;
           }
         }
       }
@@ -1018,7 +1078,7 @@ export function PinballGame({
         winner: gameState.winner,
         lastUpdated: new Date(),
       });
-    }, 30); // 30ms'de bir güncelle (33 FPS) - daha smooth senkronizasyon
+    }, 33); // 33ms'de bir güncelle (30 FPS) - Daha responsive tracking
 
     return () => clearInterval(interval);
   }, [

@@ -222,7 +222,7 @@ export default function MultiplayerGamePage() {
     if (!roomId) return;
 
     const now = Date.now();
-    // Çok sık güncelleme yapmayı önle (50ms)
+    // Çok sık güncelleme yapmayı önle (50ms) - Daha responsive tracking için
     if (now - lastUpdateRef.current < 50) return;
     lastUpdateRef.current = now;
 
