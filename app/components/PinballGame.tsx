@@ -18,6 +18,7 @@ interface GameState {
     player1: number;
     player2: number;
   };
+  rodPositions?: { x: number; y: number }[][];
   lastUpdated?: Date;
 }
 
@@ -419,6 +420,7 @@ export function PinballGame({
     // Seçili rod'u hareket ettir
     if (selectedRod.current >= 0 && selectedRod.current < rodsArray.length) {
       const selectedRodObj = rodsArray[selectedRod.current];
+      let rodMoved = false;
 
       if (keys.current["w"] || keys.current["ArrowUp"]) {
         // Tüm oyuncuları aynı anda yukarı hareket ettir
@@ -427,6 +429,7 @@ export function PinballGame({
           selectedRodObj.players.forEach((player) => {
             player.y -= 3;
           });
+          rodMoved = true;
         }
       }
 
@@ -440,7 +443,21 @@ export function PinballGame({
           selectedRodObj.players.forEach((player) => {
             player.y += 3;
           });
+          rodMoved = true;
         }
+      }
+
+      // Multiplayer modda rod hareketini güncelle - NO THROTTLE (ultra responsive)
+      if (rodMoved && multiplayer && onGameStateUpdate) {
+        const rodPositions = rodsArray.map((rod) =>
+          rod.players.map((player) => ({ x: player.x, y: player.y }))
+        );
+
+        // Rod hareketlerini ANINDA gönder - throttle yok!
+        onGameStateUpdate({
+          rodPositions: rodPositions,
+          lastUpdated: new Date(),
+        });
       }
 
       // Vuruş - multiplayer modda sadece kendi rod'unu kontrol et
@@ -1321,6 +1338,39 @@ export function PinballGame({
         };
       }
 
+      // Rod pozisyonlarını güncelle - SADECE diğer takımın hareketlerini al
+      if (externalGameState.rodPositions && multiplayer && myTeam) {
+        console.log("🎮 Rod pozisyonları INSTANT güncelleniyor:", {
+          myTeam,
+          totalRods: rods.current.length,
+          externalRodCount: externalGameState.rodPositions.length,
+          timestamp: new Date().toISOString(),
+        });
+
+        rods.current.forEach((rod, rodIndex) => {
+          // Sadece karşı takımın rod'larını güncelle
+          if (
+            rod.team !== myTeam &&
+            externalGameState.rodPositions &&
+            externalGameState.rodPositions[rodIndex]
+          ) {
+            console.log(
+              `📍 Güncelleyen rod ${rodIndex + 1} (Takım ${rod.team})`
+            );
+            rod.players.forEach((player, playerIndex) => {
+              if (externalGameState.rodPositions![rodIndex][playerIndex]) {
+                const newPos =
+                  externalGameState.rodPositions![rodIndex][playerIndex];
+
+                // INSTANT rod sync - top fiziği ile perfect sync için
+                player.x = newPos.x;
+                player.y = newPos.y;
+              }
+            });
+          }
+        });
+      }
+
       // Skorları güncelle
       let shouldUpdateScore = false;
       const newState = { ...gameState };
@@ -1397,36 +1447,44 @@ export function PinballGame({
     }
   }, [multiplayer, externalGameState, myTeam]);
 
-  // Multiplayer modda sürekli oyun durumunu güncelle - SADECE 1. OYUNCU
+  // Multiplayer modda sürekli oyun durumunu güncelle - SADECE HOST
   useEffect(() => {
-    if (
-      !multiplayer ||
-      !onGameStateUpdate ||
-      !gameState.isPlaying ||
-      myTeam !== 1
-    )
-      return;
+    if (!multiplayer || !onGameStateUpdate || !gameState.isPlaying) return;
 
     const interval = setInterval(() => {
-      // Sadece 1. oyuncu (mavi takım) oyun durumunu sürekli günceller
-      onGameStateUpdate({
-        ball: {
-          x: ball.current.x,
-          y: ball.current.y,
-          vx: ball.current.vx,
-          vy: ball.current.vy,
-        },
-        scores: {
-          player1: gameState.player1Score,
-          player2: gameState.player2Score,
-        },
-        isPlaying: gameState.isPlaying,
-        player1Score: gameState.player1Score,
-        player2Score: gameState.player2Score,
-        winner: gameState.winner,
-        lastUpdated: new Date(),
-      });
-    }, 33); // 33ms'de bir güncelle (30 FPS) - Daha responsive tracking
+      // Rod pozisyonlarını topla
+      const rodPositions = rods.current.map((rod) =>
+        rod.players.map((player) => ({ x: player.x, y: player.y }))
+      );
+
+      if (myTeam === 1) {
+        // 1. oyuncu (HOST): Top fiziği + rod pozisyonları
+        onGameStateUpdate({
+          ball: {
+            x: ball.current.x,
+            y: ball.current.y,
+            vx: ball.current.vx,
+            vy: ball.current.vy,
+          },
+          scores: {
+            player1: gameState.player1Score,
+            player2: gameState.player2Score,
+          },
+          rodPositions: rodPositions,
+          isPlaying: gameState.isPlaying,
+          player1Score: gameState.player1Score,
+          player2Score: gameState.player2Score,
+          winner: gameState.winner,
+          lastUpdated: new Date(),
+        });
+      } else {
+        // 2. oyuncu (CLIENT): Sürekli rod pozisyonları - ultra responsive
+        onGameStateUpdate({
+          rodPositions: rodPositions,
+          lastUpdated: new Date(),
+        });
+      }
+    }, 16); // 16ms = 60 FPS - Ultra responsive
 
     return () => clearInterval(interval);
   }, [

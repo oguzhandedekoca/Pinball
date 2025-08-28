@@ -49,6 +49,7 @@ export interface GameState {
     vy: number;
   };
   rods?: RodState[];
+  rodPositions?: { x: number; y: number }[][];
   scores?: {
     player1: number;
     player2: number;
