@@ -678,10 +678,20 @@ export function PinballGame({
   const scoreGoal = (scoringTeam: number) => {
     console.log(`⚽ GOAL! Takım ${scoringTeam} gol attı!`);
 
+    // Mevcut skorları al
+    const currentPlayer1Score = gameState.player1Score;
+    const currentPlayer2Score = gameState.player2Score;
+
     const newPlayer1Score =
-      scoringTeam === 1 ? gameState.player1Score + 1 : gameState.player1Score;
+      scoringTeam === 1 ? currentPlayer1Score + 1 : currentPlayer1Score;
     const newPlayer2Score =
-      scoringTeam === 2 ? gameState.player2Score + 1 : gameState.player2Score;
+      scoringTeam === 2 ? currentPlayer2Score + 1 : currentPlayer2Score;
+
+    console.log("📊 Skor güncelleniyor:", {
+      eski: { player1: currentPlayer1Score, player2: currentPlayer2Score },
+      yeni: { player1: newPlayer1Score, player2: newPlayer2Score },
+      scoringTeam,
+    });
 
     // State'i güncelle
     setGameState((prev) => ({
@@ -695,11 +705,6 @@ export function PinballGame({
 
     // Multiplayer modda oyun durumunu güncelle (top pozisyonu dahil) - SADECE HOST
     if (multiplayer && onGameStateUpdate && (!myTeam || myTeam === 1)) {
-      console.log("📊 Skor güncelleniyor:", {
-        newPlayer1Score,
-        newPlayer2Score,
-        scoringTeam,
-      });
       onGameStateUpdate({
         player1Score: newPlayer1Score,
         player2Score: newPlayer2Score,
@@ -1162,6 +1167,13 @@ export function PinballGame({
     ctx.lineWidth = 2;
     ctx.strokeRect(scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight);
 
+    // Debug: Skor bilgilerini konsola yazdır
+    console.log("🎯 Render sırasında skorlar:", {
+      player1Score: gameState.player1Score,
+      player2Score: gameState.player2Score,
+      gameState: gameState,
+    });
+
     // Mavi takım skoru
     ctx.fillStyle = "#4A90E2";
     ctx.font = "bold 32px Arial";
@@ -1180,6 +1192,7 @@ export function PinballGame({
     // Kırmızı takım skoru
     ctx.fillStyle = "#E24A4A";
     ctx.font = "bold 32px Arial";
+    ctx.textAlign = "center";
     ctx.fillText(
       gameState.player2Score.toString(),
       scoreCardX + scoreCardWidth - 75,
@@ -1532,43 +1545,6 @@ export function PinballGame({
             className="border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
             style={{ maxWidth: "100%", height: "auto" }}
           />
-        </div>
-
-        {/* Oyun Talimatları */}
-        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">
-            🎮 Langırt Kontrolleri:
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <div>
-              <p>
-                <strong>←/→ veya A/D:</strong> Rod seç (Sol/Sağ ok tuşları veya
-                A/D tuşları ile)
-              </p>
-              <p>
-                <strong>W / Yukarı Ok:</strong> Seçili rod&apos;u yukarı hareket
-                ettir
-              </p>
-              <p>
-                <strong>S / Aşağı Ok:</strong> Seçili rod&apos;u aşağı hareket
-                ettir
-              </p>
-              <p>
-                <strong>Space:</strong> Topa vur
-              </p>
-            </div>
-            <div>
-              <p>
-                <strong>🎯 Hedef:</strong> Topu karşı takımın kalesine at
-              </p>
-              <p>
-                <strong>🏆 Skor:</strong> İlk 4 golü atan takım kazanır
-              </p>
-              <p>
-                <strong>⚽ Fizik:</strong> Gerçekçi top hareketi ve çarpışma
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Gelecek Özellikler */}
