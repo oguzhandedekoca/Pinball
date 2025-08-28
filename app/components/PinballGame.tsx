@@ -101,10 +101,10 @@ export function PinballGame({
   const TABLE_Y = (CANVAS_HEIGHT - TABLE_HEIGHT) / 2;
 
   // Oyun ayarları
-  const GRAVITY = 0.05; // Yerçekimini azalttım
-  const FRICTION = 0.995; // Sürtünmeyi azalttım - top daha az yavaşlayacak
-  const BOUNCE = 0.8; // Zıplamayı artırdım
-  const MIN_BALL_SPEED = 0.5; // Minimum top hızı
+  const GRAVITY = 0.04; // Yerçekimini biraz daha azalttım
+  const FRICTION = 0.997; // Sürtünmeyi artırdım - top biraz daha yavaş
+  const BOUNCE = 0.75; // Zıplamayı azalttım
+  const MIN_BALL_SPEED = 0.4; // Minimum top hızını düşürdüm
 
   // Oyunu başlat
   const startGame = () => {
@@ -194,7 +194,7 @@ export function PinballGame({
   const createRods = () => {
     const newRods: Rod[] = [];
 
-    // Gerçek langırt taktiği - soldan sağa karışık dizilim
+    // Gerçek langırt taktiği - dengeli dizilim
     const allRods = [
       // 1. Mavi Kaleci (1 oyuncu)
       {
@@ -207,7 +207,7 @@ export function PinballGame({
       },
       // 2. Mavi Defans (3 oyuncu)
       {
-        x: TABLE_X + 150,
+        x: TABLE_X + 120,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
@@ -216,16 +216,16 @@ export function PinballGame({
       },
       // 3. Kırmızı Forvet (3 oyuncu)
       {
-        x: TABLE_X + 250,
+        x: TABLE_X + 190,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
         team: 2 as const,
         rodIndex: 2,
       },
-      // 4. Mavi Orta Saha (4 oyuncu)
+      // 4. Mavi Orta Saha (4 oyuncu) - Daha geri çekildi
       {
-        x: TABLE_X + 350,
+        x: TABLE_X + 280,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
@@ -234,7 +234,7 @@ export function PinballGame({
       },
       // 5. Kırmızı Orta Saha (4 oyuncu)
       {
-        x: TABLE_X + 450,
+        x: TABLE_X + 420,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
@@ -243,25 +243,25 @@ export function PinballGame({
       },
       // 6. Mavi Forvet (3 oyuncu)
       {
-        x: TABLE_X + 550,
+        x: TABLE_X + 500,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
         team: 1 as const,
         rodIndex: 5,
       },
-      // 7. Kırmızı Defans (3 oyuncu)
+      // 7. Kırmızı Defans (3 oyuncu) - Daha geri çekildi, kaleciden uzaklaştırıldı
       {
-        x: TABLE_X + 650,
+        x: TABLE_X + 570,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
         team: 2 as const,
         rodIndex: 6,
       },
-      // 8. Kırmızı Kaleci (1 oyuncu)
+      // 8. Kırmızı Kaleci (1 oyuncu) - Defanstan daha uzak
       {
-        x: TABLE_X + 700,
+        x: TABLE_X + 640,
         y: TABLE_Y + 50,
         width: 8,
         height: 300,
@@ -455,7 +455,7 @@ export function PinballGame({
 
           if (distance < 40) {
             // Vuruş alanını genişlet
-            const power = 10;
+            const power = 8; // Vuruş gücünü biraz azalttım
 
             // Vuruş yönünü düzelt - top her zaman ileri doğru gitmeli
             if (selectedRodObj.team === 1) {
@@ -587,7 +587,7 @@ export function PinballGame({
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance > 0) {
-              const power = 8; // Çarpışma gücünü artırdım
+              const power = 6; // Çarpışma gücünü azalttım
               ballObj.vx = (dx / distance) * power;
               ballObj.vy = (dy / distance) * power;
 
@@ -676,8 +676,13 @@ export function PinballGame({
     // Topu sıfırla
     const resetBallData = resetBallAndGetData();
 
-    // Multiplayer modda oyun durumunu güncelle (top pozisyonu dahil)
-    if (multiplayer && onGameStateUpdate) {
+    // Multiplayer modda oyun durumunu güncelle (top pozisyonu dahil) - SADECE HOST
+    if (multiplayer && onGameStateUpdate && (!myTeam || myTeam === 1)) {
+      console.log("📊 Skor güncelleniyor:", {
+        newPlayer1Score,
+        newPlayer2Score,
+        scoringTeam,
+      });
       onGameStateUpdate({
         player1Score: newPlayer1Score,
         player2Score: newPlayer2Score,
@@ -754,28 +759,59 @@ export function PinballGame({
     // Canvas'ı temizle
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Arka plan
-    ctx.fillStyle = "#1a1a2e";
+    // Arka plan - güzel gradient
+    const backgroundGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+    backgroundGradient.addColorStop(0, "#0f1419");
+    backgroundGradient.addColorStop(0.5, "#1a2332");
+    backgroundGradient.addColorStop(1, "#0f1419");
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Langırt masası
-    ctx.fillStyle = "#8B4513";
+    // Langırt masası - daha güzel gradient
+    const tableGradient = ctx.createLinearGradient(
+      TABLE_X,
+      TABLE_Y,
+      TABLE_X,
+      TABLE_Y + TABLE_HEIGHT
+    );
+    tableGradient.addColorStop(0, "#2d8659");
+    tableGradient.addColorStop(0.5, "#228B22");
+    tableGradient.addColorStop(1, "#1e7a1e");
+    ctx.fillStyle = tableGradient;
     ctx.fillRect(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT);
 
-    // Masa kenarlığı
-    ctx.strokeStyle = "#654321";
-    ctx.lineWidth = 3;
+    // Masa kenarlığı - daha güzel
+    ctx.strokeStyle = "#8B4513";
+    ctx.lineWidth = 4;
     ctx.strokeRect(TABLE_X, TABLE_Y, TABLE_WIDTH, TABLE_HEIGHT);
 
-    // Orta çizgi
-    ctx.strokeStyle = "#FFFFFF";
+    // İç kenarlık
+    ctx.strokeStyle = "#654321";
     ctx.lineWidth = 2;
-    ctx.setLineDash([10, 10]);
+    ctx.strokeRect(TABLE_X + 2, TABLE_Y + 2, TABLE_WIDTH - 4, TABLE_HEIGHT - 4);
+
+    // Orta çizgi - daha belirgin
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([15, 10]);
     ctx.beginPath();
-    ctx.moveTo(TABLE_X + TABLE_WIDTH / 2, TABLE_Y);
-    ctx.lineTo(TABLE_X + TABLE_WIDTH / 2, TABLE_Y + TABLE_HEIGHT);
+    ctx.moveTo(TABLE_X + TABLE_WIDTH / 2, TABLE_Y + 10);
+    ctx.lineTo(TABLE_X + TABLE_WIDTH / 2, TABLE_Y + TABLE_HEIGHT - 10);
     ctx.stroke();
     ctx.setLineDash([]);
+
+    // Orta daire
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(
+      TABLE_X + TABLE_WIDTH / 2,
+      TABLE_Y + TABLE_HEIGHT / 2,
+      40,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
 
     // Goller - daha güzel tasarım
     const goalGradient1 = ctx.createLinearGradient(
@@ -846,9 +882,24 @@ export function PinballGame({
 
     // Rod'ları ve oyuncuları çiz
     rods.current.forEach((rod, index) => {
-      // Rod çubuğu
-      ctx.fillStyle = "#FFD700";
+      // Rod çubuğu - metalik görünüm
+      const rodGradient = ctx.createLinearGradient(
+        rod.x,
+        rod.y,
+        rod.x + rod.width,
+        rod.y
+      );
+      rodGradient.addColorStop(0, "#FFED4A");
+      rodGradient.addColorStop(0.3, "#FFD700");
+      rodGradient.addColorStop(0.7, "#FFD700");
+      rodGradient.addColorStop(1, "#B8860B");
+      ctx.fillStyle = rodGradient;
       ctx.fillRect(rod.x, rod.y, rod.width, rod.height);
+
+      // Rod sınır çizgisi
+      ctx.strokeStyle = "#B8860B";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(rod.x, rod.y, rod.width, rod.height);
 
       // Seçili rod vurgusu - daha güzel ve belirgin
       if (selectedRod.current === index) {
