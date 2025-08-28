@@ -1210,21 +1210,6 @@ export function PinballGame({
     // Kontrol bilgileri
     ctx.font = "14px Arial";
     ctx.textAlign = "left";
-    ctx.fillText("Kontroller:", 20, CANVAS_HEIGHT - 120);
-    ctx.fillText("←/→ veya A/D: Rod seç (Sol/Sağ)", 20, CANVAS_HEIGHT - 100);
-    ctx.fillText("W/S: Yukarı/Aşağı", 20, CANVAS_HEIGHT - 80);
-    ctx.fillText("Space: Vuruş", 20, CANVAS_HEIGHT - 60);
-
-    // Seçili rod bilgisi
-    if (selectedRod.current >= 0) {
-      ctx.fillStyle = "#00FF00";
-      ctx.font = "16px Arial";
-      ctx.fillText(
-        `Seçili Rod: ${selectedRod.current + 1}`,
-        20,
-        CANVAS_HEIGHT - 40
-      );
-    }
 
     // Oyun durumu
     if (!gameState.isPlaying && !gameState.winner) {
@@ -1488,10 +1473,10 @@ export function PinballGame({
       <CardBody className="p-6">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-            🏓 Langırt Oyunu
+            🏓 Langırt Oyna
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Gerçek langırt masası! İki takım, 8 rod ve gerçekçi oyun deneyimi!
+            Gerçek langırt masası! İki takım ve gerçekçi oyun deneyimi!
           </p>
         </div>
 

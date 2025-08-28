@@ -320,10 +320,13 @@ export default function Login() {
                       "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400 transition-all duration-300",
                     label: "text-purple-200 font-medium",
                     value: "text-white",
-                    popover: "bg-white/95 backdrop-blur-md",
-                    listbox: "bg-white/95 backdrop-blur-md",
+                    listbox:
+                      "backdrop-blur-md bg-slate-800/95 border border-white/20",
+                    listboxWrapper: "backdrop-blur-md bg-slate-800/95",
+                    popoverContent:
+                      "backdrop-blur-md bg-slate-800/95 border border-white/20",
                   }}
-                  renderValue={(items) => {
+                  renderValue={() => {
                     const selectedPos = positions.find(
                       (pos) => pos.value === position
                     );
@@ -342,7 +345,7 @@ export default function Login() {
                     <SelectItem
                       key={pos.value}
                       value={pos.value}
-                      className="text-gray-800 hover:bg-purple-100"
+                      className="text-white hover:bg-white/10 data-[hover=true]:bg-white/10 data-[selected=true]:bg-purple-600/50 data-[selected=true]:text-white"
                     >
                       <div className="flex items-center gap-2">
                         <pos.icon size={18} />
