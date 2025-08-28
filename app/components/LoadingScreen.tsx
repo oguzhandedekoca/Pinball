@@ -8,7 +8,8 @@ export function LoadingScreen() {
         initial={{ opacity: 1 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="min-h-screen flex flex-col bg-black items-center justify-center"
+        style={{ backgroundColor: "#181C32" }}
+        className="min-h-screen flex flex-col items-center justify-center"
       >
         <div className="w-80 h-80 relative">
           <svg viewBox="0 0 200 120" className="w-full h-full">

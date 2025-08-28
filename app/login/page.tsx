@@ -126,6 +126,11 @@ export default function Login() {
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+
+        {/* Ek animasyonlu şekiller */}
+        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 animate-pulse"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full opacity-15 animate-bounce"></div>
+        <div className="absolute top-3/4 right-1/3 w-20 h-20 bg-gradient-to-r from-green-400 to-blue-400 rounded-full opacity-10 animate-spin"></div>
       </div>
 
       {/* Floating Particles */}
@@ -170,7 +175,7 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl mx-auto">
+      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl mx-auto min-h-[calc(100vh-200px)]">
         {/* Sol taraf - Bilgi Kartları */}
         <div className="w-full md:w-1/2 space-y-6">
           <div className="text-center md:text-left">
@@ -184,48 +189,48 @@ export default function Login() {
 
           {/* Bilgi Kartları */}
           <div className="space-y-4">
-            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105">
+            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105 hover:shadow-blue-500/20 hover:border-blue-400/50">
               <CardBody className="flex items-center gap-4 p-6">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl group-hover:scale-110 transition-transform duration-300 group-hover:shadow-lg">
                   <Trophy size={28} className="text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white text-lg">
+                  <p className="font-bold text-white text-lg group-hover:text-blue-200 transition-colors duration-300">
                     Arkadaşlarınla Rekabet Et
                   </p>
-                  <p className="text-blue-200/80">
+                  <p className="text-blue-200/80 group-hover:text-blue-200 transition-colors duration-300">
                     2v2 maçlar ile efsane anlar yaşa
                   </p>
                 </div>
               </CardBody>
             </Card>
 
-            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105">
+            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105 hover:shadow-purple-500/20 hover:border-purple-400/50">
               <CardBody className="flex items-center gap-4 p-6">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl group-hover:scale-110 transition-transform duration-300 group-hover:shadow-lg">
                   <Timer size={28} className="text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white text-lg">
+                  <p className="font-bold text-white text-lg group-hover:text-purple-200 transition-colors duration-300">
                     Kolay Rezervasyon
                   </p>
-                  <p className="text-purple-200/80">
+                  <p className="text-purple-200/80 group-hover:text-purple-200 transition-colors duration-300">
                     İstediğin saati seç ve hemen oynamaya başla
                   </p>
                 </div>
               </CardBody>
             </Card>
 
-            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105">
+            <Card className="backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 group hover:scale-105 hover:shadow-green-500/20 hover:border-green-400/50">
               <CardBody className="flex items-center gap-4 p-6">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl group-hover:scale-110 transition-transform duration-300 group-hover:shadow-lg">
                   <Users size={28} className="text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-white text-lg">
+                  <p className="font-bold text-white text-lg group-hover:text-green-200 transition-colors duration-300">
                     Takımını Oluştur
                   </p>
-                  <p className="text-green-200/80">
+                  <p className="text-green-200/80 group-hover:text-green-200 transition-colors duration-300">
                     Arkadaşlarınla takım ol ve maça başla
                   </p>
                 </div>
@@ -236,7 +241,7 @@ export default function Login() {
 
         {/* Sağ taraf - Login Formu */}
         <div className="w-full md:w-1/2 max-w-md">
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl">
+          <Card className="backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300">
             <CardHeader className="flex gap-3 justify-center pb-6 pt-8">
               <div className="flex flex-col items-center">
                 <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -263,7 +268,7 @@ export default function Login() {
                   classNames={{
                     input: "text-white placeholder:text-purple-200/60",
                     inputWrapper:
-                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400",
+                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400 transition-all duration-300",
                     label: "text-purple-200 font-medium",
                   }}
                   required
@@ -279,7 +284,7 @@ export default function Login() {
                   classNames={{
                     input: "text-white placeholder:text-purple-200/60",
                     inputWrapper:
-                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400",
+                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400 transition-all duration-300",
                     label: "text-purple-200 font-medium",
                   }}
                   required
@@ -295,7 +300,7 @@ export default function Login() {
                   classNames={{
                     input: "text-white placeholder:text-purple-200/60",
                     inputWrapper:
-                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400",
+                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400 transition-all duration-300",
                     label: "text-purple-200 font-medium",
                   }}
                   required
@@ -303,23 +308,41 @@ export default function Login() {
                 <Select
                   placeholder="Pozisyon seçin"
                   selectedKeys={[position]}
-                  onChange={(e) => setPosition(e.target.value)}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+                    if (selectedKey) setPosition(selectedKey);
+                  }}
                   variant="bordered"
                   labelPlacement="outside"
                   className="w-full"
                   classNames={{
                     trigger:
-                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400",
+                      "backdrop-blur-md bg-white/10 border-white/20 hover:border-purple-400 focus-within:border-purple-400 transition-all duration-300",
                     label: "text-purple-200 font-medium",
                     value: "text-white",
-                    // placeholder: "text-purple-200/60",
+                    popover: "bg-white/95 backdrop-blur-md",
+                    listbox: "bg-white/95 backdrop-blur-md",
+                  }}
+                  renderValue={(items) => {
+                    const selectedPos = positions.find(
+                      (pos) => pos.value === position
+                    );
+                    if (selectedPos) {
+                      return (
+                        <div className="flex items-center gap-2 text-white">
+                          <selectedPos.icon size={18} />
+                          {selectedPos.label}
+                        </div>
+                      );
+                    }
+                    return "Pozisyon seçin";
                   }}
                 >
                   {positions.map((pos) => (
                     <SelectItem
                       key={pos.value}
                       value={pos.value}
-                      className="text-gray-800"
+                      className="text-gray-800 hover:bg-purple-100"
                     >
                       <div className="flex items-center gap-2">
                         <pos.icon size={18} />
@@ -331,7 +354,7 @@ export default function Login() {
                 <Button
                   type="submit"
                   color="primary"
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
                   size="lg"
                   isLoading={isLoading}
                   startContent={isLoading ? undefined : <Zap size={20} />}
@@ -344,7 +367,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer - En altta sabit */}
       <div className="relative z-10 w-full backdrop-blur-md bg-white/10 dark:bg-black/20 border-t border-white/20 mt-auto">
         <div className="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-purple-200/60">
           © 2025 Langırt Randevu Sistemi. Tüm hakları saklıdır.
