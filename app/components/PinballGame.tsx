@@ -288,12 +288,23 @@ export function PinballGame({
       }
 
       for (let i = 0; i < playerCount; i++) {
-        const playerY = rodConfig.y + 50 + i * 80;
+        let playerY;
+
+        // Kaleciler için özel pozisyon - kalenin ortasında
+        if (playerCount === 1) {
+          // Kaleci - tam ortada
+          playerY = rodConfig.y + rodConfig.height / 2 - 15; // Oyuncu boyutunun yarısı kadar yukarı
+        } else {
+          // Diğer oyuncular - eşit aralıklarla dağıt
+          const spacing = (rodConfig.height - 100) / (playerCount - 1); // Üst ve alt boşluk bırak
+          playerY = rodConfig.y + 50 + i * spacing;
+        }
+
         players.push({
-          x: rodConfig.x - 15,
+          x: rodConfig.x - 20, // Biraz daha büyük rod genişliği
           y: playerY,
-          width: 30,
-          height: 20,
+          width: 40, // Daha büyük oyuncular
+          height: 30, // Daha büyük oyuncular
           team: rodConfig.team,
           rodIndex: rodConfig.rodIndex,
         });
@@ -599,21 +610,21 @@ export function PinballGame({
     if (isHost) {
       // Gol kontrolü - top gol alanına girdiğinde hemen gol
       if (
-        ballObj.x <= TABLE_X + 20 && // Sol gol alanı - top gol alanına girdiğinde
+        ballObj.x <= TABLE_X + 20 && // Sol gol alanı - Mavi takımın kalesi
         ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
         ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
       ) {
-        console.log("⚽ SOL GOL! Kırmızı takım gol attı!");
-        scoreGoal(2);
+        console.log("⚽ SOL GOL! Kırmızı takım gol attı! (Mavi kaleye)");
+        scoreGoal(2); // Kırmızı takım puanı
       }
 
       if (
-        ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - top gol alanına girdiğinde
+        ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - Kırmızı takımın kalesi
         ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
         ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
       ) {
-        console.log("⚽ SAĞ GOL! Mavi takım gol attı!");
-        scoreGoal(1);
+        console.log("⚽ SAĞ GOL! Mavi takım gol attı! (Kırmızı kaleye)");
+        scoreGoal(1); // Mavi takım puanı
       }
 
       // Top masadan çıktı mı kontrol et
@@ -766,17 +777,72 @@ export function PinballGame({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Goller - doğru pozisyonlarda
-    ctx.fillStyle = "#FF0000";
-    // Sol gol - mavi kaleci çubuğunun arkasında, masanın dışında
+    // Goller - daha güzel tasarım
+    const goalGradient1 = ctx.createLinearGradient(
+      TABLE_X - 40,
+      TABLE_Y,
+      TABLE_X,
+      TABLE_Y
+    );
+    goalGradient1.addColorStop(0, "#FF4444");
+    goalGradient1.addColorStop(1, "#CC0000");
+
+    const goalGradient2 = ctx.createLinearGradient(
+      TABLE_X + TABLE_WIDTH,
+      TABLE_Y,
+      TABLE_X + TABLE_WIDTH + 60,
+      TABLE_Y
+    );
+    goalGradient2.addColorStop(0, "#CC0000");
+    goalGradient2.addColorStop(1, "#FF4444");
+
+    // Sol gol - Mavi takımın kalesi
+    ctx.fillStyle = goalGradient1;
     ctx.fillRect(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 40, 120);
-    // Sağ gol - kırmızı kaleci çubuğunun arkasında, masanın dışında (daha geride)
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 40, 120);
+
+    // Sağ gol - Kırmızı takımın kalesi
+    ctx.fillStyle = goalGradient2;
     ctx.fillRect(
-      TABLE_X + TABLE_WIDTH + 20,
+      TABLE_X + TABLE_WIDTH,
       TABLE_Y + (TABLE_HEIGHT - 120) / 2,
-      40,
+      60,
       120
     );
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(
+      TABLE_X + TABLE_WIDTH,
+      TABLE_Y + (TABLE_HEIGHT - 120) / 2,
+      60,
+      120
+    );
+
+    // Gol ağları - detay için
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1;
+    // Sol gol ağı
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.moveTo(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20);
+      ctx.lineTo(TABLE_X, TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20);
+      ctx.stroke();
+    }
+    // Sağ gol ağı
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.moveTo(
+        TABLE_X + TABLE_WIDTH,
+        TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20
+      );
+      ctx.lineTo(
+        TABLE_X + TABLE_WIDTH + 60,
+        TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20
+      );
+      ctx.stroke();
+    }
 
     // Rod'ları ve oyuncuları çiz
     rods.current.forEach((rod, index) => {
@@ -784,29 +850,110 @@ export function PinballGame({
       ctx.fillStyle = "#FFD700";
       ctx.fillRect(rod.x, rod.y, rod.width, rod.height);
 
-      // Seçili rod vurgusu
+      // Seçili rod vurgusu - daha güzel ve belirgin
       if (selectedRod.current === index) {
-        ctx.strokeStyle = "#00FF00";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(rod.x - 2, rod.y - 2, rod.width + 4, rod.height + 4);
+        // Parlayan efekt için gradient
+        const gradient = ctx.createLinearGradient(
+          rod.x - 5,
+          rod.y - 5,
+          rod.x + rod.width + 5,
+          rod.y + rod.height + 5
+        );
+        gradient.addColorStop(0, "#00FF88");
+        gradient.addColorStop(0.5, "#00FF00");
+        gradient.addColorStop(1, "#00DD66");
+
+        // Ana vurgu çerçevesi
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(rod.x - 3, rod.y - 3, rod.width + 6, rod.height + 6);
+
+        // İkinci parlayan çerçeve
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(rod.x - 5, rod.y - 5, rod.width + 10, rod.height + 10);
+
+        // Glow efekti
+        ctx.shadowColor = "#00FF00";
+        ctx.shadowBlur = 10;
+        ctx.strokeRect(rod.x - 1, rod.y - 1, rod.width + 2, rod.height + 2);
+        ctx.shadowBlur = 0; // Shadow'u sıfırla
       }
 
-      // Oyuncular
+      // Oyuncular - daha güzel tasarım
       rod.players.forEach((player) => {
-        ctx.fillStyle = player.team === 1 ? "#0000FF" : "#FF0000";
+        // Ana oyuncu gövdesi - gradient renk
+        const playerGradient = ctx.createLinearGradient(
+          player.x,
+          player.y,
+          player.x,
+          player.y + player.height
+        );
+        if (player.team === 1) {
+          playerGradient.addColorStop(0, "#4A90E2");
+          playerGradient.addColorStop(1, "#2E5C8A");
+        } else {
+          playerGradient.addColorStop(0, "#E24A4A");
+          playerGradient.addColorStop(1, "#B83E3E");
+        }
+
+        ctx.fillStyle = playerGradient;
         ctx.fillRect(player.x, player.y, player.width, player.height);
 
-        // Oyuncu detayları
+        // Oyuncu sınır çizgisi
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+        // Oyuncu yüzü ve detayları - daha büyük
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(player.x + 5, player.y + 5, 5, 5);
-        ctx.fillRect(player.x + 20, player.y + 5, 5, 5);
-        ctx.fillRect(player.x + 5, player.y + 15, 5, 5);
-        ctx.fillRect(player.x + 20, player.y + 15, 5, 5);
+        // Gözler
+        ctx.fillRect(player.x + 8, player.y + 8, 6, 6);
+        ctx.fillRect(player.x + 26, player.y + 8, 6, 6);
+        // Gülümseme
+        ctx.beginPath();
+        ctx.arc(player.x + player.width / 2, player.y + 20, 8, 0, Math.PI);
+        ctx.stroke();
+
+        // Takım numarası
+        ctx.fillStyle = "#FFFF00";
+        ctx.font = "bold 12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(
+          player.team.toString(),
+          player.x + player.width / 2,
+          player.y + player.height - 3
+        );
       });
     });
 
-    // Topu çiz
-    ctx.fillStyle = "#FFFFFF";
+    // Topu çiz - daha güzel tasarım
+    const ballGradient = ctx.createRadialGradient(
+      ball.current.x - 2,
+      ball.current.y - 2,
+      0,
+      ball.current.x,
+      ball.current.y,
+      ball.current.radius
+    );
+    ballGradient.addColorStop(0, "#FFFFFF");
+    ballGradient.addColorStop(0.7, "#F0F0F0");
+    ballGradient.addColorStop(1, "#D0D0D0");
+
+    // Gölge önce
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.beginPath();
+    ctx.arc(
+      ball.current.x + 2,
+      ball.current.y + 2,
+      ball.current.radius,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Ana top
+    ctx.fillStyle = ballGradient;
     ctx.beginPath();
     ctx.arc(
       ball.current.x,
@@ -817,16 +964,15 @@ export function PinballGame({
     );
     ctx.fill();
 
-    // Top gölgesi
-    ctx.fillStyle = "#CCCCCC";
+    // Top sınır çizgisi
+    ctx.strokeStyle = "#999999";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Top üzerinde küçük parlama efekti
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(
-      ball.current.x + 1,
-      ball.current.y + 1,
-      ball.current.radius,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(ball.current.x - 1.5, ball.current.y - 1.5, 1.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Skor tablosu
