@@ -93,37 +93,81 @@ export default function MultiplayerGamePage() {
         key: snapshot.key,
         ref: snapshot.ref.toString(),
         timestamp: new Date().toISOString(),
+        myTeam,
+        currentUser: currentUser?.uid,
       });
 
       if (snapshot.exists()) {
         const data = snapshot.val();
         console.log("🎮 Oyun durumu alındı:", data);
         console.log("📊 Mevcut local state:", gameState);
+        console.log("👤 Benim takımım:", myTeam);
 
-        // Her zaman güncelle (senkronizasyon için)
-        setGameState(data);
-        localGameStateRef.current = data;
+        // Sadece farklıysa güncelle (gereksiz re-render'ları önle)
+        const currentStateString = JSON.stringify(gameState);
+        const newStateString = JSON.stringify(data);
 
-        console.log("🔄 Oyun durumu güncellendi:", data);
+        if (currentStateString !== newStateString) {
+          console.log("🔄 Oyun durumu değişti, güncelleniyor...");
+          setGameState(data);
+          localGameStateRef.current = data;
+        } else {
+          console.log("📋 Oyun durumu aynı, güncelleme yapılmıyor");
+        }
 
         // Eğer oyun başlatılıyorsa, oda durumunu da güncelle
         if (data.isPlaying && room && room.status === "waiting") {
           const roomRef = doc(database, "gameRooms", roomId);
           updateDoc(roomRef, {
             status: "playing",
-          }).then(() => {
-            console.log("🏠 Oda durumu otomatik olarak 'playing' yapıldı");
-          });
+          })
+            .then(() => {
+              console.log("🏠 Oda durumu otomatik olarak 'playing' yapıldı");
+            })
+            .catch((error) => {
+              console.error("❌ Oda durumu güncellenemedi:", error);
+            });
         }
 
         // Debug: Oyun durumu değişikliklerini takip et
         if (data.isPlaying) {
-          console.log("🎮 OYUN BAŞLADI! Her iki oyuncu da oyunda olmalı!");
+          console.log("🎮 OYUN BAŞLADI! Her iki oyuncu da oyunda olmalı!", {
+            player1Score: data.player1Score || data.scores?.player1 || 0,
+            player2Score: data.player2Score || data.scores?.player2 || 0,
+            ballPosition: data.ball,
+          });
         } else {
           console.log("⏸️ Oyun durdu veya henüz başlamadı");
         }
       } else {
-        console.log("📭 Henüz oyun durumu yok");
+        console.log("📭 Henüz oyun durumu yok - ilk oyun durumu oluşturulacak");
+        // Eğer veri yoksa ve 1. oyuncuysa, varsayılan oyun durumunu oluştur
+        if (myTeam === 1) {
+          console.log(
+            "🎯 1. oyuncu olarak varsayılan oyun durumu oluşturuluyor..."
+          );
+          const defaultGameState: GameState = {
+            isPlaying: false,
+            player1Score: 0,
+            player2Score: 0,
+            winner: null,
+            scores: {
+              player1: 0,
+              player2: 0,
+            },
+            ball: {
+              x: 400,
+              y: 300,
+              vx: 0,
+              vy: 0,
+            },
+            lastUpdated: new Date(),
+          };
+
+          updateGameState(defaultGameState).catch((error) => {
+            console.error("❌ Varsayılan oyun durumu oluşturulamadı:", error);
+          });
+        }
       }
     });
 
@@ -175,7 +219,7 @@ export default function MultiplayerGamePage() {
   };
 
   const updateGameState = async (newGameState: Partial<GameState>) => {
-    if (!roomId || !myTeam) return;
+    if (!roomId) return;
 
     const now = Date.now();
     // Çok sık güncelleme yapmayı önle (50ms)
@@ -190,13 +234,15 @@ export default function MultiplayerGamePage() {
         currentTime: now,
       });
 
-      // Yeni oyun durumunu oluştur - mevcut state'i birleştirme
+      // Mevcut oyun durumu ile birleştir
+      const currentState = localGameStateRef.current || gameState || {};
       const updatedGameState = {
+        ...currentState,
         ...newGameState,
         lastUpdated: serverTimestamp(),
       };
 
-      console.log("📊 Yeni oyun durumu:", updatedGameState);
+      console.log("📊 Birleştirilmiş oyun durumu:", updatedGameState);
 
       // Realtime Database'e kaydet
       const gameRef = ref(realtimeDatabase, `games/${roomId}/gameState`);
@@ -332,86 +378,84 @@ export default function MultiplayerGamePage() {
         ) : (
           <div className="space-y-6">
             {/* Oyun Kontrolleri */}
-            {myTeam === 1 &&
-              !gameState?.isPlaying &&
-              room?.status === "waiting" && (
-                <Card className="backdrop-blur-md bg-white/10 border border-white/20">
-                  <CardBody className="text-center py-6">
-                    <h3 className="text-lg font-bold text-white mb-4">
-                      Oyunu Başlat
-                    </h3>
-                    <Button
-                      color="success"
-                      size="lg"
-                      onPress={async () => {
-                        try {
-                          console.log("🎮 Oyun başlatılıyor...");
-                          console.log("🔍 Debug bilgileri:", {
-                            roomId,
-                            myTeam,
-                            roomStatus: room?.status,
-                            currentUser: currentUser?.uid,
+            {myTeam === 1 && !gameState?.isPlaying && opponent && (
+              <Card className="backdrop-blur-md bg-white/10 border border-white/20">
+                <CardBody className="text-center py-6">
+                  <h3 className="text-lg font-bold text-white mb-4">
+                    Oyunu Başlat
+                  </h3>
+                  <Button
+                    color="success"
+                    size="lg"
+                    onPress={async () => {
+                      try {
+                        console.log("🎮 Oyun başlatılıyor...");
+                        console.log("🔍 Debug bilgileri:", {
+                          roomId,
+                          myTeam,
+                          roomStatus: room?.status,
+                          currentUser: currentUser?.uid,
+                        });
+
+                        // Tamamen yeni bir oyun durumu oluştur
+                        const newGameState: GameState = {
+                          isPlaying: true,
+                          player1Score: 0,
+                          player2Score: 0,
+                          winner: null,
+                          scores: {
+                            player1: 0,
+                            player2: 0,
+                          },
+                          ball: {
+                            x: 400,
+                            y: 300,
+                            vx: 0,
+                            vy: 0,
+                          },
+                          lastUpdated: new Date(),
+                        };
+
+                        console.log("🆕 Yeni oyun durumu:", newGameState);
+
+                        // Önce Realtime Database'e kaydet
+                        console.log("📡 updateGameState çağrılıyor...");
+                        await updateGameState(newGameState);
+                        console.log("✅ updateGameState tamamlandı!");
+
+                        // Sonra local state'i güncelle
+                        setGameState(newGameState);
+                        localGameStateRef.current = newGameState;
+
+                        console.log("✅ Oyun başarıyla başlatıldı!");
+
+                        // Oda durumunu da güncelle
+                        if (room) {
+                          const roomRef = doc(database, "gameRooms", roomId);
+                          await updateDoc(roomRef, {
+                            status: "playing",
                           });
-
-                          // Tamamen yeni bir oyun durumu oluştur
-                          const newGameState: GameState = {
-                            isPlaying: true,
-                            player1Score: 0,
-                            player2Score: 0,
-                            winner: null,
-                            scores: {
-                              player1: 0,
-                              player2: 0,
-                            },
-                            ball: {
-                              x: 400,
-                              y: 300,
-                              vx: 0,
-                              vy: 0,
-                            },
-                            lastUpdated: new Date(),
-                          };
-
-                          console.log("🆕 Yeni oyun durumu:", newGameState);
-
-                          // Önce Realtime Database'e kaydet
-                          console.log("📡 updateGameState çağrılıyor...");
-                          await updateGameState(newGameState);
-                          console.log("✅ updateGameState tamamlandı!");
-
-                          // Sonra local state'i güncelle
-                          setGameState(newGameState);
-                          localGameStateRef.current = newGameState;
-
-                          console.log("✅ Oyun başarıyla başlatıldı!");
-
-                          // Oda durumunu da güncelle
-                          if (room) {
-                            const roomRef = doc(database, "gameRooms", roomId);
-                            await updateDoc(roomRef, {
-                              status: "playing",
-                            });
-                            console.log(
-                              "🏠 Oda durumu 'playing' olarak güncellendi"
-                            );
-                          }
-
-                          // 2. oyuncuya bildirim gönder
                           console.log(
-                            "📢 2. oyuncuya oyun başlatma bildirimi gönderildi"
+                            "🏠 Oda durumu 'playing' olarak güncellendi"
                           );
-                        } catch (error) {
-                          console.error("❌ Oyun başlatma hatası:", error);
-                          alert("Oyun başlatılırken bir hata oluştu!");
                         }
-                      }}
-                      startContent={<Play size={20} />}
-                    >
-                      Oyunu Başlat
-                    </Button>
-                  </CardBody>
-                </Card>
-              )}
+
+                        // 2. oyuncuya bildirim gönder
+                        console.log(
+                          "📢 2. oyuncuya oyun başlatma bildirimi gönderildi"
+                        );
+                      } catch (error) {
+                        console.error("❌ Oyun başlatma hatası:", error);
+                        alert("Oyun başlatılırken bir hata oluştu!");
+                      }
+                    }}
+                    startContent={<Play size={20} />}
+                  >
+                    Oyunu Başlat
+                  </Button>
+                </CardBody>
+              </Card>
+            )}
 
             {/* Oyun Durumu Bilgisi */}
             {gameState?.isPlaying && (

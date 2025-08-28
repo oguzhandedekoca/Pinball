@@ -114,7 +114,7 @@ export default function MultiplayerPage() {
               lastSeen: new Date(),
             },
           },
-          status: "playing",
+          status: "waiting",
         },
         { merge: true }
       );

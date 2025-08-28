@@ -6,6 +6,8 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyBLkXQVbvaxr-UjbvtS37Q3ta267qHBfvI",
   authDomain: "pinball-72235.firebaseapp.com",
+  databaseURL:
+    "https://pinball-72235-default-rtdb.europe-west1.firebasedatabase.app/",
   projectId: "pinball-72235",
   storageBucket: "pinball-72235.firebasestorage.app",
   messagingSenderId: "347694209389",
