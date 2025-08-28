@@ -115,8 +115,8 @@ export default function MultiplayerGamePage() {
           console.log("📋 Oyun durumu aynı, güncelleme yapılmıyor");
         }
 
-        // Eğer oyun başlatılıyorsa, oda durumunu da güncelle
-        if (data.isPlaying && room && room.status === "waiting") {
+        // Eğer oyun başlatılıyorsa, oda durumunu da güncelle (sadece gerektiğinde)
+        if (data.isPlaying && room && room.status !== "playing") {
           const roomRef = doc(database, "gameRooms", roomId);
           updateDoc(roomRef, {
             status: "playing",
@@ -345,7 +345,7 @@ export default function MultiplayerGamePage() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {room.status === "waiting" ? (
+        {!opponent ? (
           <Card className="backdrop-blur-md bg-white/10 border border-white/20">
             <CardBody className="text-center py-12">
               <Users2 size={64} className="mx-auto mb-4 text-white/60" />
@@ -429,8 +429,8 @@ export default function MultiplayerGamePage() {
 
                         console.log("✅ Oyun başarıyla başlatıldı!");
 
-                        // Oda durumunu da güncelle
-                        if (room) {
+                        // Oda durumunu da güncelle (eğer zaten playing değilse)
+                        if (room && room.status !== "playing") {
                           const roomRef = doc(database, "gameRooms", roomId);
                           await updateDoc(roomRef, {
                             status: "playing",

@@ -322,10 +322,32 @@ export function PinballGame({
 
       // Rod seçimi - Sağ/Sol ok tuşları veya A/D tuşları ile
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
-        selectedRod.current = Math.max(0, selectedRod.current - 1);
+        // Multiplayer modda sadece kendi takımının rod'larını seç
+        if (multiplayer && myTeam) {
+          const myRods = rods.current.filter((rod) => rod.team === myTeam);
+          const currentIndex = myRods.findIndex(
+            (rod) => rod.rodIndex === selectedRod.current
+          );
+          const nextIndex = Math.max(0, currentIndex - 1);
+          selectedRod.current =
+            myRods[nextIndex]?.rodIndex || myRods[0]?.rodIndex || 0;
+        } else {
+          selectedRod.current = Math.max(0, selectedRod.current - 1);
+        }
         console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sol)`);
       } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
-        selectedRod.current = Math.min(7, selectedRod.current + 1);
+        // Multiplayer modda sadece kendi takımının rod'larını seç
+        if (multiplayer && myTeam) {
+          const myRods = rods.current.filter((rod) => rod.team === myTeam);
+          const currentIndex = myRods.findIndex(
+            (rod) => rod.rodIndex === selectedRod.current
+          );
+          const nextIndex = Math.min(myRods.length - 1, currentIndex + 1);
+          selectedRod.current =
+            myRods[nextIndex]?.rodIndex || myRods[0]?.rodIndex || 0;
+        } else {
+          selectedRod.current = Math.min(7, selectedRod.current + 1);
+        }
         console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sağ)`);
       }
     };
@@ -346,6 +368,9 @@ export function PinballGame({
   // Oyun mantığını güncelle
   const updateGame = () => {
     if (!gameState.isPlaying) return;
+
+    // Multiplayer modda SADECE 1. OYUNCU (HOST) top fiziğini hesaplar
+    const isHost = !multiplayer || myTeam === 1;
 
     // Multiplayer modda sadece kendi takımını kontrol et
     if (multiplayer && myTeam) {
@@ -431,120 +456,129 @@ export function PinballGame({
       }
     }
 
-    // Top fiziği
-    ballObj.x += ballObj.vx;
-    ballObj.y += ballObj.vy;
-    ballObj.vy += GRAVITY;
+    // Top fiziği - SADECE HOST (1. oyuncu) hesaplar
+    if (isHost) {
+      ballObj.x += ballObj.vx;
+      ballObj.y += ballObj.vy;
+      ballObj.vy += GRAVITY;
 
-    // Sürtünme - top çok yavaşlamasın
-    ballObj.vx *= FRICTION;
-    ballObj.vy *= FRICTION;
+      // Sürtünme - top çok yavaşlamasın
+      ballObj.vx *= FRICTION;
+      ballObj.vy *= FRICTION;
 
-    // Minimum hız kontrolü - top neredeyse durmasın
-    if (Math.abs(ballObj.vx) < MIN_BALL_SPEED && Math.abs(ballObj.vx) > 0.1) {
-      ballObj.vx = ballObj.vx > 0 ? MIN_BALL_SPEED : -MIN_BALL_SPEED;
-    }
-    if (Math.abs(ballObj.vy) < MIN_BALL_SPEED && Math.abs(ballObj.vy) > 0.1) {
-      ballObj.vy = ballObj.vy > 0 ? MIN_BALL_SPEED : -MIN_BALL_SPEED;
-    }
-
-    // Masa sınırları
-    if (ballObj.x <= TABLE_X + ballObj.radius) {
-      ballObj.vx *= -BOUNCE;
-      ballObj.x = TABLE_X + ballObj.radius;
-      // Top çok yavaşsa hızlandır
-      if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
-        ballObj.vx = MIN_BALL_SPEED * 2;
+      // Minimum hız kontrolü - top neredeyse durmasın
+      if (Math.abs(ballObj.vx) < MIN_BALL_SPEED && Math.abs(ballObj.vx) > 0.1) {
+        ballObj.vx = ballObj.vx > 0 ? MIN_BALL_SPEED : -MIN_BALL_SPEED;
       }
-    }
-    if (ballObj.x >= TABLE_X + TABLE_WIDTH - ballObj.radius) {
-      ballObj.vx *= -BOUNCE;
-      ballObj.x = TABLE_X + TABLE_WIDTH - ballObj.radius;
-      // Top çok yavaşsa hızlandır
-      if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
-        ballObj.vx = -MIN_BALL_SPEED * 2;
-      }
-    }
-    if (ballObj.y <= TABLE_Y + ballObj.radius) {
-      ballObj.vy *= -BOUNCE;
-      ballObj.y = TABLE_Y + ballObj.radius;
-      // Top çok yavaşsa hızlandır
-      if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
-        ballObj.vy = MIN_BALL_SPEED * 2;
-      }
-    }
-    if (ballObj.y >= TABLE_Y + TABLE_HEIGHT - ballObj.radius) {
-      ballObj.vy *= -BOUNCE;
-      ballObj.y = TABLE_Y + TABLE_HEIGHT - ballObj.radius;
-      // Top çok yavaşsa hızlandır
-      if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
-        ballObj.vy = -MIN_BALL_SPEED * 2;
+      if (Math.abs(ballObj.vy) < MIN_BALL_SPEED && Math.abs(ballObj.vy) > 0.1) {
+        ballObj.vy = ballObj.vy > 0 ? MIN_BALL_SPEED : -MIN_BALL_SPEED;
       }
     }
 
-    // Oyuncular ile çarpışma
-    rodsArray.forEach((rod) => {
-      rod.players.forEach((player) => {
-        if (
-          ballObj.x + ballObj.radius >= player.x &&
-          ballObj.x - ballObj.radius <= player.x + player.width &&
-          ballObj.y + ballObj.radius >= player.y &&
-          ballObj.y - ballObj.radius <= player.y + player.height
-        ) {
-          const dx = ballObj.x - (player.x + player.width / 2);
-          const dy = ballObj.y - (player.y + player.height / 2);
-          const distance = Math.sqrt(dx * dx + dy * dy);
+    // Masa sınırları - SADECE HOST hesaplar
+    if (isHost) {
+      if (ballObj.x <= TABLE_X + ballObj.radius) {
+        ballObj.vx *= -BOUNCE;
+        ballObj.x = TABLE_X + ballObj.radius;
+        // Top çok yavaşsa hızlandır
+        if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
+          ballObj.vx = MIN_BALL_SPEED * 2;
+        }
+      }
+      if (ballObj.x >= TABLE_X + TABLE_WIDTH - ballObj.radius) {
+        ballObj.vx *= -BOUNCE;
+        ballObj.x = TABLE_X + TABLE_WIDTH - ballObj.radius;
+        // Top çok yavaşsa hızlandır
+        if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
+          ballObj.vx = -MIN_BALL_SPEED * 2;
+        }
+      }
+      if (ballObj.y <= TABLE_Y + ballObj.radius) {
+        ballObj.vy *= -BOUNCE;
+        ballObj.y = TABLE_Y + ballObj.radius;
+        // Top çok yavaşsa hızlandır
+        if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
+          ballObj.vy = MIN_BALL_SPEED * 2;
+        }
+      }
+      if (ballObj.y >= TABLE_Y + TABLE_HEIGHT - ballObj.radius) {
+        ballObj.vy *= -BOUNCE;
+        ballObj.y = TABLE_Y + TABLE_HEIGHT - ballObj.radius;
+        // Top çok yavaşsa hızlandır
+        if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
+          ballObj.vy = -MIN_BALL_SPEED * 2;
+        }
+      }
+    }
 
-          if (distance > 0) {
-            const power = 8; // Çarpışma gücünü artırdım
-            ballObj.vx = (dx / distance) * power;
-            ballObj.vy = (dy / distance) * power;
+    // Oyuncular ile çarpışma - SADECE HOST hesaplar
+    if (isHost) {
+      rodsArray.forEach((rod) => {
+        rod.players.forEach((player) => {
+          if (
+            ballObj.x + ballObj.radius >= player.x &&
+            ballObj.x - ballObj.radius <= player.x + player.width &&
+            ballObj.y + ballObj.radius >= player.y &&
+            ballObj.y - ballObj.radius <= player.y + player.height
+          ) {
+            const dx = ballObj.x - (player.x + player.width / 2);
+            const dy = ballObj.y - (player.y + player.height / 2);
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Top çok yavaşsa hızlandır
-            if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
-              ballObj.vx =
-                ballObj.vx > 0 ? MIN_BALL_SPEED * 2 : -MIN_BALL_SPEED * 2;
-            }
-            if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
-              ballObj.vy =
-                ballObj.vy > 0 ? MIN_BALL_SPEED * 2 : -MIN_BALL_SPEED * 2;
+            if (distance > 0) {
+              const power = 8; // Çarpışma gücünü artırdım
+              ballObj.vx = (dx / distance) * power;
+              ballObj.vy = (dy / distance) * power;
+
+              // Top çok yavaşsa hızlandır
+              if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
+                ballObj.vx =
+                  ballObj.vx > 0 ? MIN_BALL_SPEED * 2 : -MIN_BALL_SPEED * 2;
+              }
+              if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
+                ballObj.vy =
+                  ballObj.vy > 0 ? MIN_BALL_SPEED * 2 : -MIN_BALL_SPEED * 2;
+              }
             }
           }
-        }
+        });
       });
-    });
-
-    // Gol kontrolü - top gol alanına girdiğinde hemen gol
-    if (
-      ballObj.x <= TABLE_X + 20 && // Sol gol alanı - top gol alanına girdiğinde
-      ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
-      ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
-    ) {
-      console.log("⚽ SOL GOL! Mavi takım gol attı!");
-      scoreGoal(2);
     }
 
-    if (
-      ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - top gol alanına girdiğinde
-      ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
-      ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
-    ) {
-      console.log("⚽ SAĞ GOL! Kırmızı takım gol attı!");
-      scoreGoal(1);
+    // Gol kontrolü ve diğer oyun olayları - SADECE HOST kontrol eder
+    if (isHost) {
+      // Gol kontrolü - top gol alanına girdiğinde hemen gol
+      if (
+        ballObj.x <= TABLE_X + 20 && // Sol gol alanı - top gol alanına girdiğinde
+        ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
+        ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
+      ) {
+        console.log("⚽ SOL GOL! Kırmızı takım gol attı!");
+        scoreGoal(2);
+      }
+
+      if (
+        ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - top gol alanına girdiğinde
+        ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
+        ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
+      ) {
+        console.log("⚽ SAĞ GOL! Mavi takım gol attı!");
+        scoreGoal(1);
+      }
+
+      // Top masadan çıktı mı kontrol et
+      if (
+        ballObj.x < TABLE_X - 50 ||
+        ballObj.x > TABLE_X + TABLE_WIDTH + 50 ||
+        ballObj.y < TABLE_Y - 50 ||
+        ballObj.y > TABLE_Y + TABLE_HEIGHT + 50
+      ) {
+        resetBall();
+      }
     }
 
-    // Top masadan çıktı mı kontrol et
-    if (
-      ballObj.x < TABLE_X - 50 ||
-      ballObj.x > TABLE_X + TABLE_WIDTH + 50 ||
-      ballObj.y < TABLE_Y - 50 ||
-      ballObj.y > TABLE_Y + TABLE_HEIGHT + 50
-    ) {
-      resetBall();
-    }
-
-    // Multiplayer modda top pozisyonunu sürekli güncelle
-    if (multiplayer && onGameStateUpdate && gameState.isPlaying) {
+    // Multiplayer modda top pozisyonunu sürekli güncelle - SADECE HOST
+    if (multiplayer && onGameStateUpdate && gameState.isPlaying && isHost) {
       onGameStateUpdate({
         ball: {
           x: ballObj.x,
@@ -828,8 +862,22 @@ export function PinballGame({
   // Component mount olduğunda oyunu hazırla
   useEffect(() => {
     resetGame();
+
+    // Multiplayer modda başlangıç rod'u seçimi
+    if (multiplayer && myTeam) {
+      const myRods = rods.current.filter((rod) => rod.team === myTeam);
+      if (myRods.length > 0) {
+        selectedRod.current = myRods[0].rodIndex;
+        console.log(
+          `🎯 Başlangıç rod'u seçildi: ${
+            selectedRod.current + 1
+          } (Takım ${myTeam})`
+        );
+      }
+    }
+
     console.log("🎮 Component mount oldu, oyun hazırlanıyor...");
-  }, []);
+  }, [multiplayer, myTeam]);
 
   // Multiplayer oyun durumu senkronizasyonu
   useEffect(() => {
@@ -854,7 +902,7 @@ export function PinballGame({
 
       // Skorları güncelle
       let shouldUpdateScore = false;
-      let newState = { ...gameState };
+      const newState = { ...gameState };
 
       if (externalGameState.scores) {
         console.log("📈 Skor güncelleniyor:", externalGameState.scores);
