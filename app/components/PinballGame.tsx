@@ -427,7 +427,7 @@ export function PinballGame({
         const canMoveUp = selectedRodObj.players[0].y > TABLE_Y + 20;
         if (canMoveUp) {
           selectedRodObj.players.forEach((player) => {
-            player.y -= 3;
+            player.y -= 4; // Biraz daha hızlı hareket
           });
           rodMoved = true;
         }
@@ -441,7 +441,7 @@ export function PinballGame({
           lastPlayer.y + lastPlayer.height < TABLE_Y + TABLE_HEIGHT - 20;
         if (canMoveDown) {
           selectedRodObj.players.forEach((player) => {
-            player.y += 3;
+            player.y += 4; // Biraz daha hızlı hareket
           });
           rodMoved = true;
         }
@@ -525,17 +525,17 @@ export function PinballGame({
           Math.pow(targetBall.current.y - ballObj.y, 2)
       );
 
-      // Mesafeye göre adaptif interpolation - uzaksa hızlı, yakınsa yumuşak
+      // Mesafeye göre adaptif interpolation - biraz daha hızlı
       let lerpFactor;
       if (distance > 100) {
         // Çok büyük farklılıklar (reset, çarpışma) - anlık snap
         lerpFactor = 1.0;
       } else if (distance > 30) {
-        lerpFactor = 0.7; // Uzaksa hızlı yakalama
+        lerpFactor = 0.8; // Uzaksa daha hızlı yakalama
       } else if (distance > 10) {
-        lerpFactor = 0.4; // Orta mesafede responsive
+        lerpFactor = 0.6; // Orta mesafede daha responsive
       } else {
-        lerpFactor = 0.2; // Yakınsa smooth
+        lerpFactor = 0.4; // Yakınsa biraz daha hızlı
       }
 
       // Pozisyon güncelleme
@@ -1484,7 +1484,7 @@ export function PinballGame({
           lastUpdated: new Date(),
         });
       }
-    }, 16); // 16ms = 60 FPS - Ultra responsive
+    }, 33); // 33ms = 30 FPS - Fast but stable
 
     return () => clearInterval(interval);
   }, [
