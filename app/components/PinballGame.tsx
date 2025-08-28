@@ -92,11 +92,11 @@ export function PinballGame({
   const keys = useRef<{ [key: string]: boolean }>({});
   const selectedRod = useRef<number>(0);
 
-  // Canvas boyutları
-  const CANVAS_WIDTH = 800;
-  const CANVAS_HEIGHT = 600;
-  const TABLE_WIDTH = 700;
-  const TABLE_HEIGHT = 400;
+  // Canvas boyutları - Daha büyük ve modern
+  const CANVAS_WIDTH = 1000;
+  const CANVAS_HEIGHT = 700;
+  const TABLE_WIDTH = 900;
+  const TABLE_HEIGHT = 500;
   const TABLE_X = (CANVAS_WIDTH - TABLE_WIDTH) / 2;
   const TABLE_Y = (CANVAS_HEIGHT - TABLE_HEIGHT) / 2;
 
@@ -194,77 +194,77 @@ export function PinballGame({
   const createRods = () => {
     const newRods: Rod[] = [];
 
-    // Gerçek langırt taktiği - dengeli dizilim
+    // Gerçek langırt taktiği - büyük saha için ölçeklenmiş
     const allRods = [
       // 1. Mavi Kaleci (1 oyuncu)
       {
-        x: TABLE_X + 50,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 60,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 1 as const,
         rodIndex: 0,
       },
       // 2. Mavi Defans (3 oyuncu)
       {
-        x: TABLE_X + 120,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 150,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 1 as const,
         rodIndex: 1,
       },
       // 3. Kırmızı Forvet (3 oyuncu)
       {
-        x: TABLE_X + 190,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 240,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 2 as const,
         rodIndex: 2,
       },
-      // 4. Mavi Orta Saha (4 oyuncu) - Daha geri çekildi
+      // 4. Mavi Orta Saha (4 oyuncu)
       {
-        x: TABLE_X + 280,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 350,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 1 as const,
         rodIndex: 3,
       },
       // 5. Kırmızı Orta Saha (4 oyuncu)
       {
-        x: TABLE_X + 420,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 550,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 2 as const,
         rodIndex: 4,
       },
       // 6. Mavi Forvet (3 oyuncu)
       {
-        x: TABLE_X + 500,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 660,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 1 as const,
         rodIndex: 5,
       },
-      // 7. Kırmızı Defans (3 oyuncu) - Daha geri çekildi, kaleciden uzaklaştırıldı
+      // 7. Kırmızı Defans (3 oyuncu)
       {
-        x: TABLE_X + 570,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 750,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 2 as const,
         rodIndex: 6,
       },
-      // 8. Kırmızı Kaleci (1 oyuncu) - Defanstan daha uzak
+      // 8. Kırmızı Kaleci (1 oyuncu)
       {
-        x: TABLE_X + 640,
-        y: TABLE_Y + 50,
-        width: 8,
-        height: 300,
+        x: TABLE_X + 840,
+        y: TABLE_Y + 60,
+        width: 10,
+        height: 380,
         team: 2 as const,
         rodIndex: 7,
       },
@@ -301,10 +301,10 @@ export function PinballGame({
         }
 
         players.push({
-          x: rodConfig.x - 20, // Biraz daha büyük rod genişliği
+          x: rodConfig.x - 25, // Büyük saha için daha büyük oyuncular
           y: playerY,
-          width: 40, // Daha büyük oyuncular
-          height: 30, // Daha büyük oyuncular
+          width: 50, // Daha büyük oyuncular
+          height: 35, // Daha büyük oyuncular
           team: rodConfig.team,
           rodIndex: rodConfig.rodIndex,
         });
@@ -536,28 +536,40 @@ export function PinballGame({
       ballObj.vy += (targetBall.current.vy - ballObj.vy) * velocityLerpFactor;
     }
 
-    // Masa sınırları - SADECE HOST hesaplar
+    // Masa sınırları - SADECE HOST hesaplar (gol alanları hariç)
     if (isHost) {
+      const GOAL_HEIGHT = 160;
+      const leftGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+      const rightGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+
+      // Sol kenar - gol alanı dışında
       if (ballObj.x <= TABLE_X + ballObj.radius) {
-        ballObj.vx *= -BOUNCE;
-        ballObj.x = TABLE_X + ballObj.radius;
-        // Top çok yavaşsa hızlandır
-        if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
-          ballObj.vx = MIN_BALL_SPEED * 2;
+        // Eğer gol alanında değilse zıpla
+        if (ballObj.y < leftGoalY || ballObj.y > leftGoalY + GOAL_HEIGHT) {
+          ballObj.vx *= -BOUNCE;
+          ballObj.x = TABLE_X + ballObj.radius;
+          if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
+            ballObj.vx = MIN_BALL_SPEED * 2;
+          }
         }
       }
+
+      // Sağ kenar - gol alanı dışında
       if (ballObj.x >= TABLE_X + TABLE_WIDTH - ballObj.radius) {
-        ballObj.vx *= -BOUNCE;
-        ballObj.x = TABLE_X + TABLE_WIDTH - ballObj.radius;
-        // Top çok yavaşsa hızlandır
-        if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
-          ballObj.vx = -MIN_BALL_SPEED * 2;
+        // Eğer gol alanında değilse zıpla
+        if (ballObj.y < rightGoalY || ballObj.y > rightGoalY + GOAL_HEIGHT) {
+          ballObj.vx *= -BOUNCE;
+          ballObj.x = TABLE_X + TABLE_WIDTH - ballObj.radius;
+          if (Math.abs(ballObj.vx) < MIN_BALL_SPEED) {
+            ballObj.vx = -MIN_BALL_SPEED * 2;
+          }
         }
       }
+
+      // Üst ve alt kenarlar
       if (ballObj.y <= TABLE_Y + ballObj.radius) {
         ballObj.vy *= -BOUNCE;
         ballObj.y = TABLE_Y + ballObj.radius;
-        // Top çok yavaşsa hızlandır
         if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
           ballObj.vy = MIN_BALL_SPEED * 2;
         }
@@ -565,7 +577,6 @@ export function PinballGame({
       if (ballObj.y >= TABLE_Y + TABLE_HEIGHT - ballObj.radius) {
         ballObj.vy *= -BOUNCE;
         ballObj.y = TABLE_Y + TABLE_HEIGHT - ballObj.radius;
-        // Top çok yavaşsa hızlandır
         if (Math.abs(ballObj.vy) < MIN_BALL_SPEED) {
           ballObj.vy = -MIN_BALL_SPEED * 2;
         }
@@ -608,20 +619,26 @@ export function PinballGame({
 
     // Gol kontrolü ve diğer oyun olayları - SADECE HOST kontrol eder
     if (isHost) {
-      // Gol kontrolü - top gol alanına girdiğinde hemen gol
+      // Gol kontrolü - daha esnek gol alanı
+      const GOAL_HEIGHT = 160;
+      const leftGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+      const rightGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+
+      // Sol gol - top masa kenarını geçtiğinde ve kale alanında olduğunda
       if (
-        ballObj.x <= TABLE_X + 20 && // Sol gol alanı - Mavi takımın kalesi
-        ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
-        ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
+        ballObj.x <= TABLE_X - 10 && // Masa kenarından biraz daha içeri
+        ballObj.y >= leftGoalY - 10 && // Biraz daha esnek alan
+        ballObj.y <= leftGoalY + GOAL_HEIGHT + 10
       ) {
         console.log("⚽ SOL GOL! Kırmızı takım gol attı! (Mavi kaleye)");
         scoreGoal(2); // Kırmızı takım puanı
       }
 
+      // Sağ gol - top masa kenarını geçtiğinde ve kale alanında olduğunda
       if (
-        ballObj.x >= TABLE_X + TABLE_WIDTH - 20 && // Sağ gol alanı - Kırmızı takımın kalesi
-        ballObj.y >= TABLE_Y + (TABLE_HEIGHT - 120) / 2 &&
-        ballObj.y <= TABLE_Y + (TABLE_HEIGHT + 120) / 2
+        ballObj.x >= TABLE_X + TABLE_WIDTH + 10 && // Masa kenarından biraz daha içeri
+        ballObj.y >= rightGoalY - 10 && // Biraz daha esnek alan
+        ballObj.y <= rightGoalY + GOAL_HEIGHT + 10
       ) {
         console.log("⚽ SAĞ GOL! Mavi takım gol attı! (Kırmızı kaleye)");
         scoreGoal(1); // Mavi takım puanı
@@ -701,10 +718,10 @@ export function PinballGame({
     }
   };
 
-  // Topu sıfırla ve veri döndür - multiplayer için
+  // Topu sıfırla ve veri döndür - büyük saha için güncellenmiş
   const resetBallAndGetData = () => {
     const randomSide = Math.random() > 0.5 ? 1 : -1; // 1: sağ, -1: sol
-    const randomX = CANVAS_WIDTH / 2 + randomSide * (Math.random() * 100 + 50); // Ortadan 50-150 piksel uzakta
+    const randomX = CANVAS_WIDTH / 2 + randomSide * (Math.random() * 120 + 60); // Büyük saha için daha geniş
     const vx = randomSide * (Math.random() * 2 + 1); // Rastgele hız ve yön
     const vy = (Math.random() - 0.5) * 2; // Dikey rastgele hareket
 
@@ -726,14 +743,27 @@ export function PinballGame({
     resetBallAndGetData();
   };
 
-  // Topu kurtar (sıkıştıysa)
+  // Topu kurtar (sıkıştıysa) - büyük saha için güncellenmiş
   const rescueBall = () => {
     console.log("🚑 Top kurtarılıyor!");
     // Topu masanın ortasına, biraz yukarıya koy
     ball.current.x = CANVAS_WIDTH / 2;
-    ball.current.y = TABLE_Y + TABLE_HEIGHT / 2 - 50;
+    ball.current.y = TABLE_Y + TABLE_HEIGHT / 2 - 60; // Büyük saha için daha yukarı
     ball.current.vx = (Math.random() - 0.5) * 4; // Rastgele yön
     ball.current.vy = -3; // Yukarı doğru hafif hareket
+
+    // Multiplayer modda güncelle
+    if (multiplayer && onGameStateUpdate) {
+      onGameStateUpdate({
+        ball: {
+          x: ball.current.x,
+          y: ball.current.y,
+          vx: ball.current.vx,
+          vy: ball.current.vy,
+        },
+        lastUpdated: new Date(),
+      });
+    }
   };
 
   // Oyunu bitir
@@ -813,72 +843,143 @@ export function PinballGame({
     );
     ctx.stroke();
 
-    // Goller - daha güzel tasarım
-    const goalGradient1 = ctx.createLinearGradient(
-      TABLE_X - 40,
-      TABLE_Y,
+    // Gerçekçi kaleler - 3D görünüm
+    const GOAL_HEIGHT = 160;
+    const GOAL_DEPTH = 50;
+
+    // Sol kale (Mavi takım)
+    const leftGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+
+    // Kale zemini - gradient
+    const leftGoalGradient = ctx.createLinearGradient(
+      TABLE_X - GOAL_DEPTH,
+      leftGoalY,
       TABLE_X,
-      TABLE_Y
+      leftGoalY
     );
-    goalGradient1.addColorStop(0, "#FF4444");
-    goalGradient1.addColorStop(1, "#CC0000");
+    leftGoalGradient.addColorStop(0, "#2a4d3a");
+    leftGoalGradient.addColorStop(1, "#1e3a2e");
+    ctx.fillStyle = leftGoalGradient;
+    ctx.fillRect(TABLE_X - GOAL_DEPTH, leftGoalY, GOAL_DEPTH, GOAL_HEIGHT);
 
-    const goalGradient2 = ctx.createLinearGradient(
-      TABLE_X + TABLE_WIDTH,
-      TABLE_Y,
-      TABLE_X + TABLE_WIDTH + 60,
-      TABLE_Y
-    );
-    goalGradient2.addColorStop(0, "#CC0000");
-    goalGradient2.addColorStop(1, "#FF4444");
-
-    // Sol gol - Mavi takımın kalesi
-    ctx.fillStyle = goalGradient1;
-    ctx.fillRect(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 40, 120);
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2, 40, 120);
-
-    // Sağ gol - Kırmızı takımın kalesi
-    ctx.fillStyle = goalGradient2;
+    // Sol kale direkleri
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(TABLE_X - 5, leftGoalY - 10, 10, 10); // Üst direk
+    ctx.fillRect(TABLE_X - 5, leftGoalY + GOAL_HEIGHT, 10, 10); // Alt direk
     ctx.fillRect(
+      TABLE_X - GOAL_DEPTH - 5,
+      leftGoalY - 10,
+      10,
+      GOAL_HEIGHT + 20
+    ); // Arka direk
+
+    // Sol kale ağı - 3D file görünümü
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.lineWidth = 1.5;
+
+    // Dikey çizgiler
+    for (let i = 0; i <= 8; i++) {
+      const x = TABLE_X - GOAL_DEPTH + (i * GOAL_DEPTH) / 8;
+      ctx.beginPath();
+      ctx.moveTo(x, leftGoalY);
+      ctx.lineTo(x, leftGoalY + GOAL_HEIGHT);
+      ctx.stroke();
+    }
+
+    // Yatay çizgiler
+    for (let i = 0; i <= 8; i++) {
+      const y = leftGoalY + (i * GOAL_HEIGHT) / 8;
+      ctx.beginPath();
+      ctx.moveTo(TABLE_X - GOAL_DEPTH, y);
+      ctx.lineTo(TABLE_X, y);
+      ctx.stroke();
+    }
+
+    // Çapraz çizgiler (3D efekt)
+    for (let i = 0; i <= 4; i++) {
+      const x = TABLE_X - GOAL_DEPTH + (i * GOAL_DEPTH) / 4;
+      const y = leftGoalY + (i * GOAL_HEIGHT) / 4;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(TABLE_X, leftGoalY + GOAL_HEIGHT);
+      ctx.stroke();
+    }
+
+    // Sağ kale (Kırmızı takım)
+    const rightGoalY = TABLE_Y + (TABLE_HEIGHT - GOAL_HEIGHT) / 2;
+
+    // Kale zemini - gradient
+    const rightGoalGradient = ctx.createLinearGradient(
       TABLE_X + TABLE_WIDTH,
-      TABLE_Y + (TABLE_HEIGHT - 120) / 2,
-      60,
-      120
+      rightGoalY,
+      TABLE_X + TABLE_WIDTH + GOAL_DEPTH,
+      rightGoalY
     );
+    rightGoalGradient.addColorStop(0, "#1e3a2e");
+    rightGoalGradient.addColorStop(1, "#2a4d3a");
+    ctx.fillStyle = rightGoalGradient;
+    ctx.fillRect(TABLE_X + TABLE_WIDTH, rightGoalY, GOAL_DEPTH, GOAL_HEIGHT);
+
+    // Sağ kale direkleri
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(TABLE_X + TABLE_WIDTH - 5, rightGoalY - 10, 10, 10); // Üst direk
+    ctx.fillRect(TABLE_X + TABLE_WIDTH - 5, rightGoalY + GOAL_HEIGHT, 10, 10); // Alt direk
+    ctx.fillRect(
+      TABLE_X + TABLE_WIDTH + GOAL_DEPTH - 5,
+      rightGoalY - 10,
+      10,
+      GOAL_HEIGHT + 20
+    ); // Arka direk
+
+    // Sağ kale ağı - 3D file görünümü
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.lineWidth = 1.5;
+
+    // Dikey çizgiler
+    for (let i = 0; i <= 8; i++) {
+      const x = TABLE_X + TABLE_WIDTH + (i * GOAL_DEPTH) / 8;
+      ctx.beginPath();
+      ctx.moveTo(x, rightGoalY);
+      ctx.lineTo(x, rightGoalY + GOAL_HEIGHT);
+      ctx.stroke();
+    }
+
+    // Yatay çizgiler
+    for (let i = 0; i <= 8; i++) {
+      const y = rightGoalY + (i * GOAL_HEIGHT) / 8;
+      ctx.beginPath();
+      ctx.moveTo(TABLE_X + TABLE_WIDTH, y);
+      ctx.lineTo(TABLE_X + TABLE_WIDTH + GOAL_DEPTH, y);
+      ctx.stroke();
+    }
+
+    // Çapraz çizgiler (3D efekt)
+    for (let i = 0; i <= 4; i++) {
+      const x = TABLE_X + TABLE_WIDTH + (i * GOAL_DEPTH) / 4;
+      const y = rightGoalY + (i * GOAL_HEIGHT) / 4;
+      ctx.beginPath();
+      ctx.moveTo(TABLE_X + TABLE_WIDTH, rightGoalY);
+      ctx.lineTo(x, y + GOAL_HEIGHT);
+      ctx.stroke();
+    }
+
+    // Kale çizgileri (ceza sahası)
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+
+    // Sol ceza sahası
+    ctx.strokeRect(TABLE_X, leftGoalY - 20, 80, GOAL_HEIGHT + 40);
+
+    // Sağ ceza sahası
     ctx.strokeRect(
-      TABLE_X + TABLE_WIDTH,
-      TABLE_Y + (TABLE_HEIGHT - 120) / 2,
-      60,
-      120
+      TABLE_X + TABLE_WIDTH - 80,
+      rightGoalY - 20,
+      80,
+      GOAL_HEIGHT + 40
     );
 
-    // Gol ağları - detay için
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1;
-    // Sol gol ağı
-    for (let i = 0; i < 6; i++) {
-      ctx.beginPath();
-      ctx.moveTo(TABLE_X - 40, TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20);
-      ctx.lineTo(TABLE_X, TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20);
-      ctx.stroke();
-    }
-    // Sağ gol ağı
-    for (let i = 0; i < 6; i++) {
-      ctx.beginPath();
-      ctx.moveTo(
-        TABLE_X + TABLE_WIDTH,
-        TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20
-      );
-      ctx.lineTo(
-        TABLE_X + TABLE_WIDTH + 60,
-        TABLE_Y + (TABLE_HEIGHT - 120) / 2 + i * 20
-      );
-      ctx.stroke();
-    }
+    ctx.setLineDash([]);
 
     // Rod'ları ve oyuncuları çiz
     rods.current.forEach((rod, index) => {
@@ -956,90 +1057,142 @@ export function PinballGame({
         ctx.lineWidth = 2;
         ctx.strokeRect(player.x, player.y, player.width, player.height);
 
-        // Oyuncu yüzü ve detayları - daha büyük
+        // Oyuncu detayları - büyük saha için ölçeklenmiş
         ctx.fillStyle = "#FFFFFF";
-        // Gözler
-        ctx.fillRect(player.x + 8, player.y + 8, 6, 6);
-        ctx.fillRect(player.x + 26, player.y + 8, 6, 6);
-        // Gülümseme
+        // Gözler - daha büyük
+        ctx.fillRect(player.x + 10, player.y + 8, 8, 8);
+        ctx.fillRect(player.x + 32, player.y + 8, 8, 8);
+
+        // Gölge ekle
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.fillRect(player.x + 12, player.y + 10, 8, 8);
+        ctx.fillRect(player.x + 34, player.y + 10, 8, 8);
+
+        // Gülümseme - daha büyük
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(player.x + player.width / 2, player.y + 20, 8, 0, Math.PI);
+        ctx.arc(player.x + player.width / 2, player.y + 22, 10, 0, Math.PI);
         ctx.stroke();
 
-        // Takım numarası
+        // Takım numarası - daha büyük ve belirgin
         ctx.fillStyle = "#FFFF00";
-        ctx.font = "bold 12px Arial";
+        ctx.font = "bold 14px Arial";
         ctx.textAlign = "center";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
+        ctx.strokeText(
+          player.team.toString(),
+          player.x + player.width / 2,
+          player.y + player.height - 5
+        );
         ctx.fillText(
           player.team.toString(),
           player.x + player.width / 2,
-          player.y + player.height - 3
+          player.y + player.height - 5
         );
       });
     });
 
-    // Topu çiz - daha güzel tasarım
+    // Topu çiz - büyük ve modern tasarım
+    const ballRadius = 8; // Daha büyük top
+
+    // Gölge önce - daha belirgin
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.beginPath();
+    ctx.arc(ball.current.x + 3, ball.current.y + 3, ballRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ana top - gradient
     const ballGradient = ctx.createRadialGradient(
-      ball.current.x - 2,
-      ball.current.y - 2,
+      ball.current.x - 3,
+      ball.current.y - 3,
       0,
       ball.current.x,
       ball.current.y,
-      ball.current.radius
+      ballRadius
     );
     ballGradient.addColorStop(0, "#FFFFFF");
-    ballGradient.addColorStop(0.7, "#F0F0F0");
-    ballGradient.addColorStop(1, "#D0D0D0");
+    ballGradient.addColorStop(0.3, "#F8F8F8");
+    ballGradient.addColorStop(0.7, "#E0E0E0");
+    ballGradient.addColorStop(1, "#C0C0C0");
 
-    // Gölge önce
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-    ctx.beginPath();
-    ctx.arc(
-      ball.current.x + 2,
-      ball.current.y + 2,
-      ball.current.radius,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    // Ana top
     ctx.fillStyle = ballGradient;
     ctx.beginPath();
-    ctx.arc(
-      ball.current.x,
-      ball.current.y,
-      ball.current.radius,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(ball.current.x, ball.current.y, ballRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Top sınır çizgisi
-    ctx.strokeStyle = "#999999";
-    ctx.lineWidth = 1;
+    // Top sınır çizgisi - daha kalın
+    ctx.strokeStyle = "#888888";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Top üzerinde küçük parlama efekti
+    // Parlama efekti - daha büyük
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(ball.current.x - 1.5, ball.current.y - 1.5, 1.5, 0, Math.PI * 2);
+    ctx.arc(ball.current.x - 2, ball.current.y - 2, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Skor tablosu
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "24px Arial";
+    // İkinci parlama - küçük
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.beginPath();
+    ctx.arc(ball.current.x + 1, ball.current.y - 1, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Modern skor tablosu - üstte ortalanmış kart
+    const scoreCardWidth = 300;
+    const scoreCardHeight = 80;
+    const scoreCardX = (CANVAS_WIDTH - scoreCardWidth) / 2;
+    const scoreCardY = 20;
+
+    // Skor kartı arka planı - gradient
+    const scoreGradient = ctx.createLinearGradient(
+      scoreCardX,
+      scoreCardY,
+      scoreCardX,
+      scoreCardY + scoreCardHeight
+    );
+    scoreGradient.addColorStop(0, "rgba(0, 0, 0, 0.8)");
+    scoreGradient.addColorStop(1, "rgba(0, 0, 0, 0.6)");
+    ctx.fillStyle = scoreGradient;
+    ctx.fillRect(scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight);
+
+    // Skor kartı kenarlığı
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight);
+
+    // Mavi takım skoru
+    ctx.fillStyle = "#4A90E2";
+    ctx.font = "bold 32px Arial";
     ctx.textAlign = "center";
     ctx.fillText(
-      `${gameState.player1Score} - ${gameState.player2Score}`,
-      CANVAS_WIDTH / 2,
-      30
+      gameState.player1Score.toString(),
+      scoreCardX + 75,
+      scoreCardY + 50
     );
 
-    // Takım bilgileri
-    ctx.font = "16px Arial";
-    ctx.fillText("Mavi Takım", TABLE_X + 100, 60);
-    ctx.fillText("Kırmızı Takım", TABLE_X + TABLE_WIDTH - 100, 60);
+    // Ortadaki çizgi
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("-", CANVAS_WIDTH / 2, scoreCardY + 50);
+
+    // Kırmızı takım skoru
+    ctx.fillStyle = "#E24A4A";
+    ctx.font = "bold 32px Arial";
+    ctx.fillText(
+      gameState.player2Score.toString(),
+      scoreCardX + scoreCardWidth - 75,
+      scoreCardY + 50
+    );
+
+    // Takım isimleri
+    ctx.fillStyle = "#4A90E2";
+    ctx.font = "bold 12px Arial";
+    ctx.fillText("MAVI", scoreCardX + 75, scoreCardY + 70);
+
+    ctx.fillStyle = "#E24A4A";
+    ctx.fillText("KIRMIZI", scoreCardX + scoreCardWidth - 75, scoreCardY + 70);
 
     // Kontrol bilgileri
     ctx.font = "14px Arial";
