@@ -84,7 +84,6 @@ export default function MultiplayerPage() {
       };
 
       const docRef = await addDoc(collection(database, "gameRooms"), newRoom);
-      console.log("Oda oluşturuldu:", docRef.id);
 
       // Odaya katıl
       router.push(`/multiplayer/game/${docRef.id}`);
@@ -118,8 +117,6 @@ export default function MultiplayerPage() {
         },
         { merge: true }
       );
-
-      console.log("✅ Odaya başarıyla katıldınız!");
 
       // Odaya katıl
       router.push(`/multiplayer/game/${room.id}`);
