@@ -268,10 +268,10 @@ export default function Dashboard() {
               onPress={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="min-w-unit-10"
             >
-              {theme === "dark" ? (
-                <Sun className="text-yellow-400" size={24} />
-              ) : (
+              {theme === "light" ? (
                 <Moon className="text-gray-600" size={24} />
+              ) : (
+                <Sun className="text-yellow-400" size={24} />
               )}
             </Button>
             <Button color="danger" variant="flat" onPress={logout}>

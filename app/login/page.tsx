@@ -175,7 +175,7 @@ export default function Login() {
       {/* Ana İçerik Alanı */}
       <div
         className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl m-auto pb-20"
-        style={{ margin: "0 auto", width: "50%" }}
+        style={{ margin: "0 auto", width: "60%" }}
       >
         {/* Sol taraf - Bilgi Kartları */}
         <div className="w-full md:w-1/2 space-y-6">

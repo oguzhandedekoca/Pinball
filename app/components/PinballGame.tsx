@@ -165,17 +165,13 @@ export function PinballGame({
       maxSpeed: level.maxSpeed,
     });
 
-    aiRods.forEach((rod, index) => {
+    aiRods.forEach((rod) => {
       console.log(`🎯 AI Rod ${rod.rodIndex + 1} işleniyor:`, {
         rodIndex: rod.rodIndex,
         team: rod.team,
         playerCount: rod.players.length,
         currentY: rod.players[0].y,
       });
-
-      // Her rod için ayrı reaksiyon süresi kontrolü
-      const urgency = ballDistance < 200 ? 0.3 : 1.0; // Yakınsa 3 kat hızlı
-      const adjustedReactionMs = level.reactionMs * urgency;
 
       let targetY;
       let aggressiveness = 1.0;
