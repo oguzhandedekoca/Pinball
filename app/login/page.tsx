@@ -120,7 +120,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 relative overflow-hidden flex flex-col">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -175,7 +175,11 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl mx-auto min-h-[calc(100vh-200px)]">
+      {/* Ana İçerik Alanı */}
+      <div
+        className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-4 gap-8 max-w-7xl m-auto pb-20"
+        style={{ margin: "0 auto", width: "50%" }}
+      >
         {/* Sol taraf - Bilgi Kartları */}
         <div className="w-full md:w-1/2 space-y-6">
           <div className="text-center md:text-left">
@@ -240,8 +244,8 @@ export default function Login() {
         </div>
 
         {/* Sağ taraf - Login Formu */}
-        <div className="w-full md:w-1/2 max-w-md">
-          <Card className="backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300">
+        <div className="w-full md:w-1/2 max-w-md flex items-center mt-20">
+          <Card className="backdrop-blur-md bg-white/10 border border-white/20 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 w-full">
             <CardHeader className="flex gap-3 justify-center pb-6 pt-8">
               <div className="flex flex-col items-center">
                 <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -371,7 +375,7 @@ export default function Login() {
       </div>
 
       {/* Footer - En altta sabit */}
-      <div className="relative z-10 w-full backdrop-blur-md bg-white/10 dark:bg-black/20 border-t border-white/20 mt-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-10 w-full backdrop-blur-md bg-white/10 dark:bg-black/20 border-t border-white/20">
         <div className="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-purple-200/60">
           © 2025 Langırt Randevu Sistemi. Tüm hakları saklıdır.
         </div>
