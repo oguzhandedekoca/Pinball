@@ -99,10 +99,8 @@ export default function Login() {
           if (error instanceof Error) {
             const errorMessage = getErrorMessage(error.message);
             showToast(errorMessage);
-            console.error("Login error:", error);
           } else {
             showToast("Beklenmeyen bir hata oluştu");
-            console.error("Unknown login error:", error);
           }
           setIsLoading(false);
           return;
@@ -110,8 +108,7 @@ export default function Login() {
 
         setCurrentUser(userCredential.user);
         router.push(`/dashboard?player1=${username}&position=${position}`);
-      } catch (error) {
-        console.error("Giriş hatası:", error);
+      } catch {
         showToast("Giriş yapılırken bir hata oluştu!");
       } finally {
         setIsLoading(false);

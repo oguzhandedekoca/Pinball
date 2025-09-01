@@ -434,7 +434,7 @@ export default function Dashboard() {
           <ModalContent>
             <ModalHeader className="flex gap-2 items-center text-orange-600 dark:text-orange-400">
               <Users size={24} />
-              🚦 Dur! 🚦
+              🚦 Dur!
             </ModalHeader>
             <ModalBody className="py-6">
               <div className="text-center space-y-4">
@@ -447,9 +447,6 @@ export default function Dashboard() {
                   Daha takım arkadaşlarını seçmedin birader! 😤
                 </h3>
                 <div className="space-y-3">
-                  <p className="text-gray-600 dark:text-gray-400 text-lg">
-                    Adamlarını topla gel! 🏃‍♂️💨
-                  </p>
                   <div className="bg-orange-50 dark:bg-orange-800/30 p-3 rounded-lg">
                     <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
                       💪 Yukarıdaki formdan takımını kur, sonra maç yapalım!
