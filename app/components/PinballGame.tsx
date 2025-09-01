@@ -54,6 +54,8 @@ interface PinballGameProps {
   myTeam?: 1 | 2;
   onGameStateUpdate?: (gameState: Partial<GameState>) => void;
   gameState?: GameState | null;
+  aiOpponent?: boolean;
+  aiDifficulty?: "easy" | "medium" | "hard";
 }
 
 export function PinballGame({
@@ -61,6 +63,8 @@ export function PinballGame({
   myTeam,
   onGameStateUpdate,
   gameState: externalGameState,
+  aiOpponent = false,
+  aiDifficulty = "medium",
 }: PinballGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
@@ -92,6 +96,7 @@ export function PinballGame({
   const rods = useRef<Rod[]>([]);
   const keys = useRef<{ [key: string]: boolean }>({});
   const selectedRod = useRef<number>(0);
+  const lastAiUpdateRef = useRef<number>(0);
 
   // Canvas boyutları - Daha büyük ve modern
   const CANVAS_WIDTH = 1000;
@@ -106,6 +111,151 @@ export function PinballGame({
   const FRICTION = 0.997; // Sürtünmeyi artırdım - top biraz daha yavaş
   const BOUNCE = 0.75; // Zıplamayı azalttım
   const MIN_BALL_SPEED = 0.4; // Minimum top hızını düşürdüm
+
+  // AI seviyeleri - daha agresif ve hareketli
+  const AI_LEVELS: Record<
+    "easy" | "medium" | "hard",
+    { maxSpeed: number; reactionMs: number; aimErrorPx: number }
+  > = {
+    easy: { maxSpeed: 4.5, reactionMs: 180, aimErrorPx: 20 },
+    medium: { maxSpeed: 6.0, reactionMs: 100, aimErrorPx: 10 },
+    hard: { maxSpeed: 8.0, reactionMs: 50, aimErrorPx: 3 },
+  };
+
+  // Top, belirli bir X konumuna ulaştığında tahmini Y (basit yansıma ile)
+  const predictBallYAtX = (ballObj: Ball, targetX: number): number => {
+    if (Math.abs(ballObj.vx) < 0.001) return ballObj.y;
+    const frames = (targetX - ballObj.x) / ballObj.vx;
+    let predictedY = ballObj.y + ballObj.vy * frames;
+
+    const top = TABLE_Y + 20;
+    const bottom = TABLE_Y + TABLE_HEIGHT - 20;
+    const h = bottom - top;
+    let rel = (predictedY - top) % (2 * h);
+    if (rel < 0) rel += 2 * h;
+    predictedY = rel > h ? bottom - (rel - h) : top + rel;
+    return predictedY;
+  };
+
+  // AI güncellemesi (sadece tek oyunculu modda) - çok daha agresif ve gol odaklı
+  const updateAI = () => {
+    if (multiplayer || !aiOpponent || !gameState.isPlaying) return;
+    const level = AI_LEVELS[aiDifficulty];
+    const now = performance.now();
+
+    // AI güncelleme sıklığını artır - daha responsive olması için
+    if (now - lastAiUpdateRef.current < level.reactionMs * 0.5) return;
+
+    const ballObj = ball.current;
+    // AI sağ/kırmızı takımı oynasın - TÜM kırmızı takım rod'larını al
+    const aiRods = rods.current.filter((r) => r.team === 2);
+    const isComingToAI = ballObj.vx > 0; // sağa doğru geliyorsa AI tarafına geliyor
+    const ballDistance = Math.abs(ballObj.x - TABLE_X - TABLE_WIDTH); // AI tarafına uzaklık
+
+    console.log("🤖 AI güncelleniyor:", {
+      aiRodsCount: aiRods.length,
+      aiRods: aiRods.map((r) => ({
+        rodIndex: r.rodIndex,
+        team: r.team,
+        playerCount: r.players.length,
+      })),
+      ballDistance,
+      isComingToAI,
+      level: aiDifficulty,
+      maxSpeed: level.maxSpeed,
+    });
+
+    aiRods.forEach((rod, index) => {
+      console.log(`🎯 AI Rod ${rod.rodIndex + 1} işleniyor:`, {
+        rodIndex: rod.rodIndex,
+        team: rod.team,
+        playerCount: rod.players.length,
+        currentY: rod.players[0].y,
+      });
+
+      // Her rod için ayrı reaksiyon süresi kontrolü
+      const urgency = ballDistance < 200 ? 0.3 : 1.0; // Yakınsa 3 kat hızlı
+      const adjustedReactionMs = level.reactionMs * urgency;
+
+      let targetY;
+      let aggressiveness = 1.0;
+
+      if (isComingToAI && ballDistance < 300) {
+        // SALDIRI MODU: Top yaklaşıyorsa agresif takip
+        targetY =
+          predictBallYAtX(ballObj, rod.x) +
+          (Math.random() * 2 - 1) * level.aimErrorPx;
+        aggressiveness = 2.0; // Daha hızlı hareket
+      } else if (ballObj.vx < 0) {
+        // SAVUNMA MODU: Top uzaklaşıyorsa kaleyi koru
+        const goalCenterY = TABLE_Y + TABLE_HEIGHT / 2;
+        targetY = goalCenterY + (Math.random() * 2 - 1) * 30; // Kale merkezi etrafında salın
+        aggressiveness = 1.5; // Orta hızda hareket
+      } else {
+        // BEKLEMEDE: Orta pozisyonda bekle ama aktif kal
+        // Forvet (rod 8) için daha geniş hareket alanı
+        const oscillationRange = rod.rodIndex === 7 ? 100 : 50; // Forvet daha aktif
+        const oscillation =
+          Math.sin(now * 0.002 + rod.rodIndex * 0.5) * oscillationRange;
+        targetY = TABLE_Y + TABLE_HEIGHT / 2 + oscillation;
+        aggressiveness = rod.rodIndex === 7 ? 1.5 : 1.2; // Forvet daha hızlı
+      }
+
+      const firstPlayer = rod.players[0];
+      const dy = targetY - (firstPlayer.y + firstPlayer.height / 2);
+      const step = Math.max(
+        -level.maxSpeed * aggressiveness,
+        Math.min(level.maxSpeed * aggressiveness, dy)
+      );
+
+      const canMoveUp = rod.players[0].y > TABLE_Y + 20;
+      const lastPlayer = rod.players[rod.players.length - 1];
+      const canMoveDown =
+        lastPlayer.y + lastPlayer.height < TABLE_Y + TABLE_HEIGHT - 20;
+
+      if ((step < 0 && canMoveUp) || (step > 0 && canMoveDown)) {
+        rod.players.forEach((p) => {
+          p.y += step;
+        });
+        console.log(`🎮 AI rod ${rod.rodIndex + 1} hareket ediyor:`, {
+          targetY,
+          step,
+          newY: rod.players[0].y,
+          aggressiveness,
+        });
+      }
+
+      // Agresif vuruş - daha büyük alan ve güçlü vuruş
+      rod.players.forEach((p) => {
+        const dx = ballObj.x - (p.x + p.width / 2);
+        const dy2 = ballObj.y - (p.y + p.height / 2);
+        const dist = Math.hypot(dx, dy2);
+
+        // Vuruş alanını küçült - sadece gerçekten yakın olduğunda vuruş yap
+        // Forvet (rod 8) için biraz daha geniş vuruş alanı
+        const hitRange = rod.rodIndex === 7 ? 45 : 35;
+        if (dist < hitRange) {
+          const power = isComingToAI ? 8 : 6; // Vuruş gücünü azalt
+
+          // Gol hedefli vuruş - oyuncunun kalesine doğru
+          const goalCenterY = TABLE_Y + TABLE_HEIGHT / 2;
+          const aimAtGoal = (goalCenterY - ballObj.y) * 0.2; // Hedefleme etkisini azalt
+
+          ballObj.vx = -Math.abs(power);
+          ballObj.vy = (dy2 / (dist || 1)) * power * 0.5 + aimAtGoal; // Daha kontrollü vuruş
+
+          console.log(
+            `⚽ AI vuruş yaptı! Rod ${
+              rod.rodIndex + 1
+            }, Güç: ${power}, Mesafe: ${dist.toFixed(1)}`
+          );
+        }
+      });
+    });
+
+    // AI güncellemesi tamamlandı
+    lastAiUpdateRef.current = now;
+  };
 
   // Oyunu başlat
   const startGame = () => {
@@ -355,8 +505,8 @@ export function PinballGame({
 
       // Rod seçimi - Sağ/Sol ok tuşları veya A/D tuşları ile
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
-        // Multiplayer modda sadece kendi takımının rod'larını seç
         if (multiplayer && myTeam) {
+          // Multiplayer modda sadece kendi takımının rod'larını seç
           const myRods = rods.current.filter((rod) => rod.team === myTeam);
           const currentIndex = myRods.findIndex(
             (rod) => rod.rodIndex === selectedRod.current
@@ -364,13 +514,22 @@ export function PinballGame({
           const nextIndex = Math.max(0, currentIndex - 1);
           selectedRod.current =
             myRods[nextIndex]?.rodIndex || myRods[0]?.rodIndex || 0;
+        } else if (!multiplayer && aiOpponent) {
+          // AI modda sadece mavi takım rod'larını seç
+          const playerRods = rods.current.filter((rod) => rod.team === 1);
+          const currentIndex = playerRods.findIndex(
+            (rod) => rod.rodIndex === selectedRod.current
+          );
+          const nextIndex = Math.max(0, currentIndex - 1);
+          selectedRod.current =
+            playerRods[nextIndex]?.rodIndex || playerRods[0]?.rodIndex || 0;
         } else {
           selectedRod.current = Math.max(0, selectedRod.current - 1);
         }
         console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sol)`);
       } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
-        // Multiplayer modda sadece kendi takımının rod'larını seç
         if (multiplayer && myTeam) {
+          // Multiplayer modda sadece kendi takımının rod'larını seç
           const myRods = rods.current.filter((rod) => rod.team === myTeam);
           const currentIndex = myRods.findIndex(
             (rod) => rod.rodIndex === selectedRod.current
@@ -378,6 +537,15 @@ export function PinballGame({
           const nextIndex = Math.min(myRods.length - 1, currentIndex + 1);
           selectedRod.current =
             myRods[nextIndex]?.rodIndex || myRods[0]?.rodIndex || 0;
+        } else if (!multiplayer && aiOpponent) {
+          // AI modda sadece mavi takım rod'larını seç
+          const playerRods = rods.current.filter((rod) => rod.team === 1);
+          const currentIndex = playerRods.findIndex(
+            (rod) => rod.rodIndex === selectedRod.current
+          );
+          const nextIndex = Math.min(playerRods.length - 1, currentIndex + 1);
+          selectedRod.current =
+            playerRods[nextIndex]?.rodIndex || playerRods[0]?.rodIndex || 0;
         } else {
           selectedRod.current = Math.min(7, selectedRod.current + 1);
         }
@@ -406,9 +574,9 @@ export function PinballGame({
     // Multiplayer modda SADECE 1. OYUNCU (HOST) top fiziğini hesaplar
     const isHost = !multiplayer || myTeam === 1;
 
-    // Multiplayer modda sadece kendi takımını kontrol et
+    // Takım kontrolü - multiplayer ve AI modunda farklı davranış
     if (multiplayer && myTeam) {
-      // Sadece kendi takımının rod'larını kontrol et
+      // Multiplayer modda sadece kendi takımının rod'larını kontrol et
       const myRods = rods.current.filter((rod) => rod.team === myTeam);
 
       // Seçili rod sadece kendi takımından olmalı
@@ -425,10 +593,33 @@ export function PinballGame({
           }
         }
       }
+    } else if (!multiplayer && aiOpponent) {
+      // AI modda sadece mavi takımı (team 1) kontrol et
+      const playerRods = rods.current.filter((rod) => rod.team === 1);
+
+      // Seçili rod sadece mavi takımdan olmalı
+      if (
+        selectedRod.current >= 0 &&
+        selectedRod.current < rods.current.length
+      ) {
+        const selectedRodObj = rods.current[selectedRod.current];
+        if (selectedRodObj.team !== 1) {
+          // Kırmızı takım rod'unu seçmeye çalışıyorsa, mavi takımdan birini seç
+          const firstPlayerRod = playerRods[0];
+          if (firstPlayerRod) {
+            selectedRod.current = firstPlayerRod.rodIndex;
+          }
+        }
+      }
     }
 
     const ballObj = ball.current;
     const rodsArray = rods.current;
+
+    // Tek oyunculu modda AI'yi çalıştır
+    if (!multiplayer && aiOpponent) {
+      updateAI();
+    }
 
     // Seçili rod'u hareket ettir
     if (selectedRod.current >= 0 && selectedRod.current < rodsArray.length) {
@@ -473,11 +664,12 @@ export function PinballGame({
         });
       }
 
-      // Vuruş - multiplayer modda sadece kendi rod'unu kontrol et
-      if (
-        keys.current[" "] &&
-        (!multiplayer || selectedRodObj.team === myTeam)
-      ) {
+      // Vuruş kontrolü - takım bazında kısıtla
+      const canHitBall = multiplayer
+        ? selectedRodObj.team === myTeam
+        : !aiOpponent || selectedRodObj.team === 1; // AI modda sadece mavi takım
+
+      if (keys.current[" "] && canHitBall) {
         selectedRodObj.players.forEach((player) => {
           const dx = ballObj.x - (player.x + player.width / 2);
           const dy = ballObj.y - (player.y + player.height / 2);
@@ -1304,8 +1496,9 @@ export function PinballGame({
   useEffect(() => {
     resetGame();
 
-    // Multiplayer modda başlangıç rod'u seçimi
+    // Başlangıç rod'u seçimi
     if (multiplayer && myTeam) {
+      // Multiplayer modda kendi takımdan başla
       const myRods = rods.current.filter((rod) => rod.team === myTeam);
       if (myRods.length > 0) {
         selectedRod.current = myRods[0].rodIndex;
@@ -1315,10 +1508,21 @@ export function PinballGame({
           } (Takım ${myTeam})`
         );
       }
+    } else if (!multiplayer && aiOpponent) {
+      // AI modda mavi takımdan (team 1) başla
+      const playerRods = rods.current.filter((rod) => rod.team === 1);
+      if (playerRods.length > 0) {
+        selectedRod.current = playerRods[0].rodIndex;
+        console.log(
+          `🎯 AI modda başlangıç rod'u seçildi: ${
+            selectedRod.current + 1
+          } (Mavi Takım)`
+        );
+      }
     }
 
     console.log("🎮 Component mount oldu, oyun hazırlanıyor...");
-  }, [multiplayer, myTeam]);
+  }, [multiplayer, myTeam, aiOpponent]);
 
   // Multiplayer oyun durumu senkronizasyonu
   useEffect(() => {

@@ -315,9 +315,9 @@ export default function Dashboard() {
           currentUserUid={currentUserUid}
         />
 
-        {/* Mini Langırt Oyunu */}
+        {/* Mini Langırt Oyunu - AI rakip ile */}
         <div className="mt-8">
-          <PinballGame />
+          <PinballGame aiOpponent aiDifficulty="medium" />
         </div>
 
         {/* Onay Butonu */}
