@@ -152,27 +152,7 @@ export function PinballGame({
     const isComingToAI = ballObj.vx > 0; // sağa doğru geliyorsa AI tarafına geliyor
     const ballDistance = Math.abs(ballObj.x - TABLE_X - TABLE_WIDTH); // AI tarafına uzaklık
 
-    console.log("🤖 AI güncelleniyor:", {
-      aiRodsCount: aiRods.length,
-      aiRods: aiRods.map((r) => ({
-        rodIndex: r.rodIndex,
-        team: r.team,
-        playerCount: r.players.length,
-      })),
-      ballDistance,
-      isComingToAI,
-      level: aiDifficulty,
-      maxSpeed: level.maxSpeed,
-    });
-
     aiRods.forEach((rod) => {
-      console.log(`🎯 AI Rod ${rod.rodIndex + 1} işleniyor:`, {
-        rodIndex: rod.rodIndex,
-        team: rod.team,
-        playerCount: rod.players.length,
-        currentY: rod.players[0].y,
-      });
-
       let targetY;
       let aggressiveness = 1.0;
 
@@ -213,12 +193,6 @@ export function PinballGame({
         rod.players.forEach((p) => {
           p.y += step;
         });
-        console.log(`🎮 AI rod ${rod.rodIndex + 1} hareket ediyor:`, {
-          targetY,
-          step,
-          newY: rod.players[0].y,
-          aggressiveness,
-        });
       }
 
       // Agresif vuruş - daha büyük alan ve güçlü vuruş
@@ -239,12 +213,6 @@ export function PinballGame({
 
           ballObj.vx = -Math.abs(power);
           ballObj.vy = (dy2 / (dist || 1)) * power * 0.5 + aimAtGoal; // Daha kontrollü vuruş
-
-          console.log(
-            `⚽ AI vuruş yaptı! Rod ${
-              rod.rodIndex + 1
-            }, Güç: ${power}, Mesafe: ${dist.toFixed(1)}`
-          );
         }
       });
     });
@@ -255,7 +223,6 @@ export function PinballGame({
 
   // Oyunu başlat
   const startGame = () => {
-    console.log("🎮 Oyun başlatılıyor...");
     setGameState((prev) => ({ ...prev, isPlaying: true }));
 
     // Multiplayer modda oyun durumunu güncelle
@@ -282,7 +249,6 @@ export function PinballGame({
 
   // Oyunu durdur
   const pauseGame = () => {
-    console.log("⏸️ Oyun duraklatılıyor...");
     setGameState((prev) => ({ ...prev, isPlaying: false }));
 
     // Multiplayer modda oyun durumunu güncelle
@@ -296,7 +262,6 @@ export function PinballGame({
 
   // Oyunu sıfırla
   const resetGame = () => {
-    console.log("🔄 Oyun sıfırlanıyor...");
     setGameState({
       isPlaying: false,
       player1Score: 0,
@@ -464,7 +429,6 @@ export function PinballGame({
     });
 
     rods.current = newRods;
-    console.log(`${newRods.length} rod oluşturuldu`);
   };
 
   // Klavye olaylarını dinle
@@ -522,7 +486,6 @@ export function PinballGame({
         } else {
           selectedRod.current = Math.max(0, selectedRod.current - 1);
         }
-        console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sol)`);
       } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
         if (multiplayer && myTeam) {
           // Multiplayer modda sadece kendi takımının rod'larını seç
@@ -545,7 +508,6 @@ export function PinballGame({
         } else {
           selectedRod.current = Math.min(7, selectedRod.current + 1);
         }
-        console.log(`🎯 Rod ${selectedRod.current + 1} seçildi (Sağ)`);
       }
     };
 
@@ -685,17 +647,6 @@ export function PinballGame({
               ballObj.vx = -Math.abs(power);
               ballObj.vy = (dy / distance) * power * 0.5; // Dikey hareket az
             }
-
-            console.log(
-              "⚽ Topa vuruldu! Takım:",
-              selectedRodObj.team,
-              "Güç:",
-              power,
-              "Multiplayer:",
-              multiplayer,
-              "MyTeam:",
-              myTeam
-            );
           }
         });
       }
@@ -848,7 +799,6 @@ export function PinballGame({
         ballObj.y >= leftGoalY - 10 && // Biraz daha esnek alan
         ballObj.y <= leftGoalY + GOAL_HEIGHT + 10
       ) {
-        console.log("⚽ SOL GOL! Kırmızı takım gol attı! (Mavi kaleye)");
         scoreGoal(2); // Kırmızı takım puanı
       }
 
@@ -858,7 +808,6 @@ export function PinballGame({
         ballObj.y >= rightGoalY - 10 && // Biraz daha esnek alan
         ballObj.y <= rightGoalY + GOAL_HEIGHT + 10
       ) {
-        console.log("⚽ SAĞ GOL! Mavi takım gol attı! (Kırmızı kaleye)");
         scoreGoal(1); // Mavi takım puanı
       }
 
@@ -894,8 +843,6 @@ export function PinballGame({
 
   // Gol at
   const scoreGoal = (scoringTeam: number) => {
-    console.log(`⚽ GOAL! Takım ${scoringTeam} gol attı!`);
-
     // Mevcut skorları al
     const currentPlayer1Score = gameState.player1Score;
     const currentPlayer2Score = gameState.player2Score;
@@ -904,12 +851,6 @@ export function PinballGame({
       scoringTeam === 1 ? currentPlayer1Score + 1 : currentPlayer1Score;
     const newPlayer2Score =
       scoringTeam === 2 ? currentPlayer2Score + 1 : currentPlayer2Score;
-
-    console.log("📊 Skor güncelleniyor:", {
-      eski: { player1: currentPlayer1Score, player2: currentPlayer2Score },
-      yeni: { player1: newPlayer1Score, player2: newPlayer2Score },
-      scoringTeam,
-    });
 
     // State'i güncelle
     setGameState((prev) => ({
@@ -968,7 +909,6 @@ export function PinballGame({
 
   // Topu kurtar (sıkıştıysa) - büyük saha için güncellenmiş
   const rescueBall = () => {
-    console.log("🚑 Top kurtarılıyor!");
     // Topu masanın ortasına, biraz yukarıya koy
     ball.current.x = CANVAS_WIDTH / 2;
     ball.current.y = TABLE_Y + TABLE_HEIGHT / 2 - 60; // Büyük saha için daha yukarı
@@ -992,7 +932,6 @@ export function PinballGame({
   // Oyunu bitir
   const endGame = () => {
     const winner = gameState.player1Score >= 4 ? 1 : 2;
-    console.log(`🏆 OYUN BİTTİ! Takım ${winner} kazandı!`);
 
     setGameState((prev) => ({
       ...prev,
@@ -1385,13 +1324,6 @@ export function PinballGame({
     ctx.lineWidth = 2;
     ctx.strokeRect(scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight);
 
-    // Debug: Skor bilgilerini konsola yazdır
-    console.log("🎯 Render sırasında skorlar:", {
-      player1Score: gameState.player1Score,
-      player2Score: gameState.player2Score,
-      gameState: gameState,
-    });
-
     // Mavi takım skoru
     ctx.fillStyle = "#4A90E2";
     ctx.font = "bold 32px Arial";
@@ -1498,43 +1430,21 @@ export function PinballGame({
       const myRods = rods.current.filter((rod) => rod.team === myTeam);
       if (myRods.length > 0) {
         selectedRod.current = myRods[0].rodIndex;
-        console.log(
-          `🎯 Başlangıç rod'u seçildi: ${
-            selectedRod.current + 1
-          } (Takım ${myTeam})`
-        );
       }
     } else if (!multiplayer && aiOpponent) {
       // AI modda mavi takımdan (team 1) başla
       const playerRods = rods.current.filter((rod) => rod.team === 1);
       if (playerRods.length > 0) {
         selectedRod.current = playerRods[0].rodIndex;
-        console.log(
-          `🎯 AI modda başlangıç rod'u seçildi: ${
-            selectedRod.current + 1
-          } (Mavi Takım)`
-        );
       }
     }
-
-    console.log("🎮 Component mount oldu, oyun hazırlanıyor...");
   }, [multiplayer, myTeam, aiOpponent]);
 
   // Multiplayer oyun durumu senkronizasyonu
   useEffect(() => {
     if (multiplayer && externalGameState) {
-      console.log("🔄 Multiplayer senkronizasyon:", {
-        external: externalGameState,
-        local: gameState,
-        myTeam,
-      });
-
       // Dış oyun durumundan güncelle - SADECE CLIENT (2. oyuncu) top pozisyonunu alır
       if (externalGameState.ball && (!multiplayer || myTeam === 2)) {
-        console.log(
-          "⚽ Top hedef pozisyonu güncelleniyor (Client):",
-          externalGameState.ball
-        );
         // Smooth interpolation için hedef pozisyonu ayarla + predictive tracking
         const networkDelay = 0.05; // Tahmini 50ms network gecikmesi
         const predictedX =
@@ -1553,13 +1463,6 @@ export function PinballGame({
 
       // Rod pozisyonlarını güncelle - SADECE diğer takımın hareketlerini al
       if (externalGameState.rodPositions && multiplayer && myTeam) {
-        console.log("🎮 Rod pozisyonları INSTANT güncelleniyor:", {
-          myTeam,
-          totalRods: rods.current.length,
-          externalRodCount: externalGameState.rodPositions.length,
-          timestamp: new Date().toISOString(),
-        });
-
         rods.current.forEach((rod, rodIndex) => {
           // Sadece karşı takımın rod'larını güncelle
           if (
@@ -1567,9 +1470,6 @@ export function PinballGame({
             externalGameState.rodPositions &&
             externalGameState.rodPositions[rodIndex]
           ) {
-            console.log(
-              `📍 Güncelleyen rod ${rodIndex + 1} (Takım ${rod.team})`
-            );
             rod.players.forEach((player, playerIndex) => {
               if (externalGameState.rodPositions![rodIndex][playerIndex]) {
                 const newPos =
@@ -1589,7 +1489,6 @@ export function PinballGame({
       const newState = { ...gameState };
 
       if (externalGameState.scores) {
-        console.log("📈 Skor güncelleniyor:", externalGameState.scores);
         if (
           newState.player1Score !== externalGameState.scores.player1 ||
           newState.player2Score !== externalGameState.scores.player2
@@ -1602,24 +1501,9 @@ export function PinballGame({
 
       // Oyun durumunu güncelle - BU ÇOK ÖNEMLİ!
       if (externalGameState.isPlaying !== undefined) {
-        console.log(
-          "🎮 Oyun durumu güncelleniyor:",
-          "Dış:",
-          externalGameState.isPlaying,
-          "Mevcut:",
-          gameState.isPlaying,
-          "Benim takımım:",
-          myTeam
-        );
-
         if (newState.isPlaying !== externalGameState.isPlaying) {
           newState.isPlaying = externalGameState.isPlaying;
           shouldUpdateScore = true;
-
-          console.log(
-            "✅ Oyun durumu güncellendi:",
-            externalGameState.isPlaying
-          );
 
           // Eğer oyun başlatılıyorsa ve client ise, top pozisyonunu da sıfırla
           if (
@@ -1627,7 +1511,6 @@ export function PinballGame({
             externalGameState.ball &&
             myTeam === 2
           ) {
-            console.log("🎯 Oyun başladı, top pozisyonu sıfırlanıyor (Client)");
             const ballData = {
               x: externalGameState.ball.x,
               y: externalGameState.ball.y,
@@ -1654,7 +1537,6 @@ export function PinballGame({
 
       // Eğer değişiklik varsa state'i güncelle
       if (shouldUpdateScore) {
-        console.log("🔄 Local state güncelleniyor:", newState);
         setGameState(newState);
       }
     }
@@ -1712,18 +1594,9 @@ export function PinballGame({
 
   // Oyun durumu değiştiğinde gameLoop'u başlat/durdur
   useEffect(() => {
-    console.log(
-      "🎮 Oyun durumu değişti:",
-      gameState.isPlaying,
-      "Multiplayer:",
-      multiplayer
-    );
-
     if (gameState.isPlaying) {
-      console.log("🚀 Oyun başladı, gameLoop başlatılıyor...");
       gameLoop();
     } else {
-      console.log("⏸️ Oyun durdu, gameLoop durduruluyor...");
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
