@@ -323,7 +323,19 @@ export function PinballGame({
 
   // Klavye olaylarını dinle
   useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null): boolean => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      if (el.isContentEditable) return true;
+      const tag = (el.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select")
+        return true;
+      return !!el.closest("input, textarea, select, [contenteditable='true']");
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Eğer kullanıcı bir input/textarea/select içinde yazıyorsa oyunu tetikleme
+      if (isEditableTarget(e.target)) return;
       // Sayfa kaydırmasını engelle
       if (
         e.key === "ArrowLeft" ||
@@ -374,6 +386,7 @@ export function PinballGame({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (isEditableTarget(e.target)) return;
       keys.current[e.key] = false;
     };
 
